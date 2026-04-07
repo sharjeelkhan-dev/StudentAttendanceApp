@@ -78,8 +78,8 @@ private fun SettingsContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
                 .background(PrimaryGreenDark)
+                .statusBarsPadding()
                 .padding(top = 16.dp, bottom = 20.dp)
                 .padding(horizontal = 4.dp)
         ) {
@@ -99,7 +99,9 @@ private fun SettingsContent(
         }
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .navigationBarsPadding(),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
             // Appearance

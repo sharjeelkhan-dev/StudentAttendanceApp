@@ -35,19 +35,21 @@ val PercentageHigh = Color(0xFF4CAF50)   // 80-100%
 val PercentageMedium = Color(0xFFFFA726) // 50-79%
 val PercentageLow = Color(0xFFE53935)    // 0-49%
 
-// Avatar Colors (rotating for different students)
+// Avatar Colors (Dark/Vibrant palette)
 val AvatarColors = listOf(
-    Color(0xFF3F51B5), // Indigo
-    Color(0xFF009688), // Teal
-    Color(0xFFFF5722), // Deep Orange
-    Color(0xFF795548), // Brown
-    Color(0xFF607D8B), // Blue Grey
-    Color(0xFF9C27B0), // Purple
-    Color(0xFFE91E63), // Pink
-    Color(0xFF00BCD4), // Cyan
-    Color(0xFF4CAF50), // Green
-    Color(0xFFFF9800), // Orange
+    Color(0xFF1B5E20), // Dark Green
+    Color(0xFF0D47A1), // Dark Blue
+    Color(0xFFB71C1C), // Dark Red
+    Color(0xFF4A148C), // Dark Purple
+    Color(0xFF004D40), // Dark Teal
+    Color(0xFFE65100), // Dark Orange
+    Color(0xFF3E2723), // Dark Brown
+    Color(0xFF212121), // Dark Grey
+    Color(0xFF827717), // Dark Lime
+    Color(0xFF006064), // Dark Cyan
 )
+
+val AvatarTextColor = Color.White
 
 fun getAvatarColor(name: String): Color {
     if (name.isEmpty()) return AvatarColors[0]

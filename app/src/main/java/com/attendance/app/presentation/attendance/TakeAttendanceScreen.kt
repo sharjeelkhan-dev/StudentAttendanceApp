@@ -32,13 +32,15 @@ import java.util.Locale
 @Composable
 fun TakeAttendanceScreen(
     modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp),
     viewModel: AttendanceViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     AttendanceContent(
         state = state,
         onEvent = viewModel::onEvent,
-        modifier = modifier
+        modifier = modifier,
+        paddingValues = paddingValues
     )
 }
 
@@ -46,7 +48,8 @@ fun TakeAttendanceScreen(
 private fun AttendanceContent(
     state: AttendanceState,
     onEvent: (AttendanceEvent) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp)
 ) {
     val filteredStudents = if (state.searchQuery.isBlank()) {
         state.students
@@ -70,7 +73,9 @@ private fun AttendanceContent(
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            contentPadding = PaddingValues(
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            )
         ) {
             // Search bar
             item {
@@ -153,10 +158,11 @@ private fun AttendanceHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .statusBarsPadding()
             .background(PrimaryGreenDark)
-            .padding(top = 16.dp, bottom = 20.dp)
-            .padding(horizontal = 20.dp)
+            .statusBarsPadding()
+            .height(130.dp)
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = dateFormatted,
@@ -247,7 +253,7 @@ private fun AttendanceStudentRow(
             ) {
                 Text(
                     text = studentState.student.initials,
-                    color = Color.White,
+                    color = AvatarTextColor,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )

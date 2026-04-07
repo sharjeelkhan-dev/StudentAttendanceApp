@@ -74,9 +74,8 @@ fun AttendanceTheme(
             insetsController.isAppearanceLightStatusBars = !darkTheme
             insetsController.isAppearanceLightNavigationBars = !darkTheme
             
-            // Hide navigation bars and set behavior to transient
-            insetsController.hide(androidx.core.view.WindowInsetsCompat.Type.navigationBars())
-            insetsController.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            // Allow content to be drawn under system bars
+            WindowCompat.setDecorFitsSystemWindows(window, false)
         }
     }
 

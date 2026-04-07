@@ -26,6 +26,9 @@ import com.attendance.app.domain.model.AttendanceStatus
 import com.attendance.app.domain.model.ClassModel
 import com.attendance.app.domain.model.SessionSummary
 import com.attendance.app.domain.model.Student
+import com.attendance.app.presentation.components.SessionCard
+import com.attendance.app.presentation.components.SessionsSummaryCard
+import com.attendance.app.presentation.components.StatsCard
 import com.attendance.app.presentation.theme.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -34,29 +37,33 @@ import java.util.Locale
 @Composable
 fun ReportsScreen(
     modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp),
     viewModel: ReportsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     ReportsContent(
         state = state,
-        modifier = modifier
+        modifier = modifier,
+        paddingValues = paddingValues
     )
 }
 
 @Composable
 private fun ReportsContent(
     state: ReportsState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp)
 ) {
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         // Fixed Header
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
                 .background(PrimaryGreenDark)
-                .padding(top = 16.dp, bottom = 20.dp)
-                .padding(horizontal = 20.dp)
+                .statusBarsPadding()
+                .height(130.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "Attendance Report",
@@ -81,7 +88,9 @@ private fun ReportsContent(
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            contentPadding = PaddingValues(
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            )
         ) {
             // Student Overview section
             item {
@@ -107,11 +116,75 @@ private fun ReportsContent(
                     ) {
                         Column(modifier = Modifier.padding(vertical = 12.dp)) {
                             state.studentReports.forEach { report ->
-                                ReportStudentRow(
-                                    initials = report.student.initials,
-                                    name = report.student.fullName,
-                                    percentage = report.attendancePercentage
-                                )
+                                val initials = report.student.fullName.split(" ")
+                                    .filter { it.isNotBlank() }
+                                    .take(2)
+                                    .mapNotNull { it.firstOrNull()?.uppercaseChar() }
+                                    .joinToString("")
+                                
+                                val percentage = report.attendancePercentage
+                                val percentageColor = if (percentage >= 75) PrimaryGreen else AbsentRed
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    // Avatar
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .offset(y = 5.dp)
+                                            .clip(CircleShape)
+                                            .background(getAvatarColor(report.student.fullName)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = initials,
+                                            color = AvatarTextColor,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(16.dp))
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = report.student.fullName,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 16.sp
+                                            )
+                                            Text(
+                                                text = "${percentage.toInt()}%",
+                                                color = percentageColor,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        LinearProgressIndicator(
+                                            progress = { (percentage / 100f).toFloat() },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(6.dp)
+                                                .clip(RoundedCornerShape(10.dp)),
+                                            color = percentageColor,
+                                            trackColor = MaterialTheme.colorScheme.surface,
+                                            strokeCap = StrokeCap.Round
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -164,11 +237,17 @@ private fun ReportsContent(
                 }
             } else {
                 items(state.sessionDetails) { session ->
-                    NewSessionCard(
+                    val studentStatusList = session.records.map { record ->
+                        val studentName = session.students.find { it.id == record.studentId }?.fullName ?: "Unknown"
+                        studentName to record.status
+                    }
+                    
+                    SessionDetailCard(
                         date = session.summary.date,
                         presentCount = session.summary.presentCount,
                         totalCount = session.summary.totalStudents,
-                        sessionDetails = session
+                        students = studentStatusList,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
                     )
                 }
             }
@@ -176,148 +255,83 @@ private fun ReportsContent(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun NewSessionCard(
+private fun SessionDetailCard(
     date: String,
     presentCount: Int,
     totalCount: Int,
-    sessionDetails: SessionWithRecords
+    students: List<Pair<String, AttendanceStatus>>,
+    modifier: Modifier = Modifier
 ) {
-    val parsedDate = try { LocalDate.parse(date) } catch (_: Exception) { LocalDate.now() }
-    val displayDate = parsedDate.format(DateTimeFormatter.ofPattern("MMM dd", Locale.ENGLISH))
+    val parsedDate = try {
+        LocalDate.parse(date)
+    } catch (e: Exception) {
+        LocalDate.now()
+    }
+    val displayDate = parsedDate.format(DateTimeFormatter.ofPattern("MMMM d", Locale.ENGLISH))
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = displayDate,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "$presentCount/$totalCount present",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                sessionDetails.students.forEach { student ->
-                    val record = sessionDetails.records.find { it.studentId == student.id }
-                    val isPresent = record?.status == AttendanceStatus.PRESENT
-                    
-                    val studentColor = getAvatarColor(student.fullName)
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(if (isPresent) studentColor else studentColor.copy(alpha = 0.1f))
-                            .border(
-                                width = 1.dp,
-                                color = if (isPresent) Color.Transparent else studentColor.copy(alpha = 0.3f),
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = student.initials,
-                            color = if (isPresent) Color.White else studentColor.copy(alpha = 0.6f),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ReportStudentRow(
-    initials: String,
-    name: String,
-    percentage: Double
-) {
-    val percentageColor = if (percentage >= 75) PrimaryGreen else AbsentRed
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        // Avatar
-        Box(
+        Column(
             modifier = Modifier
-                .size(40.dp)
-                .offset(y = 5.dp)
-                .clip(CircleShape)
-                .background(getAvatarColor(name)),
-            contentAlignment = Alignment.Center
+                .padding(20.dp)
+                .fillMaxWidth()
         ) {
-            Text(
-                text = initials,
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleMedium,
+                    text = displayDate,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 16.sp
+                    color = Color(0xFF1A1A1A)
                 )
                 Text(
-                    text = "${percentage.toInt()}%",
-                    color = percentageColor,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "$presentCount/$totalCount present",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            LinearProgressIndicator(
-                progress = { (percentage / 100f).toFloat() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(10.dp)),
-                color = percentageColor,
-                trackColor = MaterialTheme.colorScheme.surface,
-                strokeCap = StrokeCap.Round
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                students.forEach { (name, status) ->
+                    val initials = name.split(" ")
+                        .filter { it.isNotBlank() }
+                        .take(2)
+                        .mapNotNull { it.firstOrNull()?.uppercaseChar() }
+                        .joinToString("")
+
+                    val isPresent = status == AttendanceStatus.PRESENT
+                    val statusColor = if (isPresent) PresentGreen else AbsentRed
+
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(getAvatarColor(name))
+                            ,contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = initials,
+                            color = AvatarTextColor,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -356,7 +370,8 @@ fun ReportsScreenPreview() {
                 studentReports = dummyReports,
                 sessionDetails = listOf(dummySession),
                 isLoading = false
-            )
+            ),
+            paddingValues = PaddingValues(0.dp)
         )
     }
 }
@@ -396,7 +411,7 @@ fun ReportsScreenWithBottomBarPreview() {
                     onNavigate = {}
                 )
             }
-        ) { paddingValues ->
+        ) { innerPadding ->
             ReportsContent(
                 state = ReportsState(
                     selectedClass = ClassModel(1, "Computer Science", "Section A"),
@@ -404,7 +419,8 @@ fun ReportsScreenWithBottomBarPreview() {
                     sessionDetails = listOf(dummySession),
                     isLoading = false
                 ),
-                modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
+                modifier = Modifier.fillMaxSize(),
+                paddingValues = innerPadding
             )
         }
     }

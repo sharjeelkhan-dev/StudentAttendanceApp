@@ -9,7 +9,7 @@ interface AttendanceRepository {
     fun getAttendanceByStudent(studentId: Long, classId: Long): Flow<List<AttendanceRecord>>
     suspend fun saveAttendance(records: List<AttendanceRecord>)
     suspend fun getSessionSummary(classId: Long, date: String): SessionSummary
-    fun getRecentSessions(classId: Long, limit: Int = 10): Flow<List<String>>
+    fun getRecentSessions(classId: Long, limit: Int): Flow<List<String>>
     fun getSessionDates(classId: Long): Flow<List<String>>
     suspend fun getAllAttendanceForClass(classId: Long): List<AttendanceRecord>
     suspend fun getAllAttendance(): List<AttendanceRecord>

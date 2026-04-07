@@ -10,6 +10,9 @@ import com.attendance.app.domain.repository.ClassRepository
 import com.attendance.app.domain.repository.StudentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -21,8 +24,13 @@ data class HomeState(
     val totalStudents: Int = 0,
     val presentToday: Int = 0,
     val absentToday: Int = 0,
-    val recentSessions: List<SessionSummary> = emptyList(),
+    val recentSessions: List<SessionWithStudents> = emptyList(),
     val isLoading: Boolean = true
+)
+
+data class SessionWithStudents(
+    val summary: SessionSummary,
+    val studentNames: List<String>
 )
 
 @HiltViewModel
@@ -67,11 +75,18 @@ class HomeViewModel @Inject constructor(
                     // We also need to trigger refresh when attendance is saved for today
                     attendanceRepository.getAttendanceByClassAndDate(selectedClass.id, LocalDate.now().toString())
                 ) { students, recentDates, _ ->
+                    Triple(students, recentDates, selectedClass)
+                }.mapLatest { (students, recentDates, selectedClass) ->
                     val today = LocalDate.now().toString()
                     val todaySummary = attendanceRepository.getSessionSummary(selectedClass.id, today)
                     
-                    val sessions = recentDates.map { date ->
-                        attendanceRepository.getSessionSummary(selectedClass.id, date)
+                    val sessions = coroutineScope {
+                        recentDates.map { date ->
+                            async {
+                                val summary = attendanceRepository.getSessionSummary(selectedClass.id, date)
+                                SessionWithStudents(summary, students.map { it.fullName })
+                            }
+                        }.awaitAll()
                     }
                     
                     HomeState(

@@ -36,6 +36,7 @@ import com.attendance.app.presentation.theme.*
 fun StudentsScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp),
     viewModel: StudentsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -60,12 +61,13 @@ fun StudentsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         modifier = modifier
-    ) { paddingValues ->
+    ) { innerPadding ->
         StudentsContent(
             state = state,
             onBack = onBack,
             onEvent = viewModel::onEvent,
-            modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
+            modifier = Modifier.fillMaxSize(),
+            paddingValues = paddingValues
         )
     }
 }
@@ -75,17 +77,19 @@ private fun StudentsContent(
     state: StudentsState,
     onBack: () -> Unit,
     onEvent: (StudentsEvent) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp)
 ) {
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         // Fixed Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
                 .background(PrimaryGreenDark)
-                .padding(top = 16.dp, bottom = 24.dp)
-                .padding(horizontal = 20.dp)
+                .statusBarsPadding()
+                .height(130.dp)
+                .padding(horizontal = 20.dp),
+            contentAlignment = Alignment.CenterStart
         ) {
             Column {
                 Text(
@@ -112,7 +116,9 @@ private fun StudentsContent(
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp)
+                contentPadding = PaddingValues(
+                    bottom = paddingValues.calculateBottomPadding() + 16.dp
+                )
             ) {
                 // Add Student button / form
                 if (state.selectedClass != null) {
@@ -351,7 +357,7 @@ private fun StudentRow(
             ) {
                 Text(
                     text = initials,
-                    color = Color.White,
+                    color = AvatarTextColor,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -415,7 +421,8 @@ fun StudentsPreview() {
                 isLoading = false
             ),
             onBack = {},
-            onEvent = {}
+            onEvent = {},
+            paddingValues = PaddingValues(0.dp)
         )
     }
 }

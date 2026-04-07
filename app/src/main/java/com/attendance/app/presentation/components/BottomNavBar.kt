@@ -45,10 +45,8 @@ fun BottomNavBar(
     modifier: Modifier = Modifier
 ) {
     NavigationBar(
-        modifier = modifier
-            .navigationBarsPadding()
-            .padding(bottom = 2.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = modifier,
+        containerColor = Color.White,
         contentColor = BottomNavSelected,
         tonalElevation = 0.dp
     ) {

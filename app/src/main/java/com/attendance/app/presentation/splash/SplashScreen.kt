@@ -57,8 +57,6 @@ private fun SplashContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(PrimaryGreenDark, PrimaryGreen)

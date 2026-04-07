@@ -56,7 +56,7 @@ interface AttendanceDao {
         ORDER BY date DESC 
         LIMIT :limit
     """)
-    fun getRecentSessions(classId: Long, limit: Int = 10): Flow<List<String>>
+    fun getRecentSessions(classId: Long, limit: Int): Flow<List<String>>
 
     @Query("SELECT * FROM attendance WHERE classId = :classId")
     suspend fun getAllAttendanceForClass(classId: Long): List<AttendanceEntity>

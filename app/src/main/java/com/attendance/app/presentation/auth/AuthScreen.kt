@@ -22,7 +22,8 @@ fun AuthScreen(onUnlockClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding(),
         contentAlignment = Alignment.Center
     ) {
         Column(

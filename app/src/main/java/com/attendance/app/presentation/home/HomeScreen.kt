@@ -1,5 +1,6 @@
 package com.attendance.app.presentation.home
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.attendance.app.R
 import com.attendance.app.presentation.components.SessionCard
+import com.attendance.app.presentation.components.SessionsSummaryCard
 import com.attendance.app.presentation.components.StatsCard
 import com.attendance.app.presentation.theme.*
 import java.time.LocalDate
@@ -28,6 +30,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.ui.draw.shadow
 
 @Composable
 fun HomeScreen(
@@ -37,6 +40,7 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToClasses: () -> Unit,
     modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp),
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -46,7 +50,8 @@ fun HomeScreen(
         onNavigateToReports = onNavigateToReports,
         onNavigateToStudents = onNavigateToStudents,
         onNavigateToSettings = onNavigateToSettings,
-        modifier = modifier
+        modifier = modifier,
+        paddingValues = paddingValues
     )
 }
 
@@ -57,11 +62,14 @@ private fun HomeContent(
     onNavigateToReports: () -> Unit,
     onNavigateToStudents: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp)
 ) {
-    Column(modifier = modifier.fillMaxSize().
-    background(MaterialTheme.colorScheme.
-    background)) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F9FE))
+    ) {
 
         // Fixed Header
         HomeHeader(
@@ -72,7 +80,9 @@ private fun HomeContent(
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            contentPadding = PaddingValues(
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            )
         ) {
             // Stats Row
             item {
@@ -94,13 +104,63 @@ private fun HomeContent(
 
             // Recent Sessions Header
             item {
-                Text(
-                    text = "RECENT SESSIONS",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "RECENT SESSIONS",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onBackground
+                                .copy(alpha = 0.6f),
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp,
+                        )
+                        Text(
+                            text = if (state.selectedClass?.section?.isNotEmpty() == true) 
+                                "${state.selectedClass.name} — ${state.selectedClass.section}" 
+                                else state.selectedClass?.name ?: "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    }
+
+                    Surface(
+                        // 1. Image ki tarah soft white background
+                        color = Color.White,
+                        // 2. Corner radius ko image se match karne
+                        // ke liye thoda badha diya h
+                         shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .shadow(
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(12.dp),
+                                ambientColor = Color.Black.copy(alpha = 0.1f),
+                                spotColor = Color.Black.copy(alpha = 0.2f)
+                            )
+                            .clickable { onNavigateToReports() }
+                    ) {
+                        Text(
+                            text = "See all",
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            // 3. Font style aur color jo aapne pehle use kiya tha
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF5C59E8)
+                        )
+                    }
+                }
+            }
+
+            // Summary Card
+            item {
+                SessionsSummaryCard(
+                    sessionCount = state.recentSessions.size,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                 )
             }
 
@@ -124,11 +184,13 @@ private fun HomeContent(
             } else {
                 items(state.recentSessions) { session ->
                     SessionCard(
-                        date = session.date,
-                        presentCount = session.presentCount,
-                        totalCount = session.totalStudents,
-                        percentage = session.percentage,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
+                        date = session.summary.date,
+                        presentCount = session.summary.presentCount,
+                        absentCount = session.summary.absentCount,
+                        percentage = session.summary.percentage,
+                        studentNames = session.studentNames,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                        onClick = { onNavigateToReports() }
                     )
                 }
             }
@@ -155,10 +217,11 @@ private fun HomeHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .statusBarsPadding()
             .background(PrimaryGreenDark)
-            .padding(top = 16.dp, bottom = 20.dp)
-            .padding(horizontal = 20.dp)
+            .statusBarsPadding()
+            .height(130.dp)
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.Center
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -245,7 +308,8 @@ private fun QuickActionsSection(
         Text(
             text = "QUICK ACTIONS",
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            color = MaterialTheme.colorScheme.onBackground
+                .copy(alpha = 0.6f),
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp,
             modifier = Modifier.padding(vertical = 14.dp)
@@ -286,12 +350,8 @@ private fun QuickActionButton(
     isHighlighted: Boolean = false,
     onClick: () -> Unit
 ) {
-    val bgColor = if (isHighlighted)
-        PrimaryGreen else MaterialTheme.
-    colorScheme.surfaceVariant
-    val contentColor = if (isHighlighted)
-        Color.White else MaterialTheme.
-    colorScheme.onSurfaceVariant
+    val bgColor = if (isHighlighted) PrimaryGreen else MaterialTheme.colorScheme.surfaceVariant
+    val contentColor = if (isHighlighted) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
 
     val iconPainter = when (icon) {
         is ImageVector -> rememberVectorPainter(icon)
@@ -303,8 +363,7 @@ private fun QuickActionButton(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = bgColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if
-                (isHighlighted) 4.dp else 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isHighlighted) 4.dp else 2.dp),
         onClick = onClick
     ) {
         Column(
@@ -342,9 +401,18 @@ fun HomePreview() {
                 presentToday = 38,
                 absentToday = 7,
                 recentSessions = listOf(
-                    com.attendance.app.domain.model.SessionSummary("2024-05-15", 45, 40, 5),
-                    com.attendance.app.domain.model.SessionSummary("2024-05-14", 45, 38, 7),
-                    com.attendance.app.domain.model.SessionSummary("2024-05-12", 45, 42, 3)
+                    SessionWithStudents(
+                        com.attendance.app.domain.model.SessionSummary("2024-05-15", 45, 40, 5),
+                        listOf("Aisha Khan", "Bilal Ahmed", "Fatima Malik")
+                    ),
+                    SessionWithStudents(
+                        com.attendance.app.domain.model.SessionSummary("2024-05-14", 45, 38, 7),
+                        listOf("Hamza Ali", "Ira Naeem", "Junaid Rashid")
+                    ),
+                    SessionWithStudents(
+                        com.attendance.app.domain.model.SessionSummary("2024-05-12", 45, 42, 3),
+                        listOf("Aisha Khan", "Junaid Rashid")
+                    )
                 ),
                 isLoading = false
             ),
@@ -369,25 +437,61 @@ fun RecentSessionsPreview() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
+                .background(Color(0xFFF8F9FE))
+                .padding(bottom = 20.dp)
         ) {
-            Text(
-                text = "RECENT SESSIONS",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
-                modifier = Modifier.padding(bottom = 14.dp, start = 4.dp)
+            // Recent Sessions Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "RECENT SESSIONS",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = "Software Engineering — 6C1",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+
+                Surface(
+                    color = Color(0xFFF3F3FF),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "See all",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF5C59E8)
+                    )
+                }
+            }
+
+            // Summary Card
+            SessionsSummaryCard(
+                sessionCount = dummySessions.size,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
             )
 
+            // Recent Sessions List
             dummySessions.forEach { session ->
                 SessionCard(
                     date = session.date,
                     presentCount = session.presentCount,
-                    totalCount = session.totalStudents,
+                    absentCount = session.absentCount,
                     percentage = session.percentage,
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    studentNames = listOf("Aisha Khan", "Bilal Ahmed", "Fatima Malik"),
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                 )
             }
         }

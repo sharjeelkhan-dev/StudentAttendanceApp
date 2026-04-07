@@ -4,6 +4,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -61,7 +62,7 @@ fun AppNavigation() {
         NavHost(
             navController = navController,
             startDestination = Screen.Splash.route,
-            modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()),
+            modifier = Modifier.fillMaxSize(),
             enterTransition = { fadeIn(animationSpec = tween(400)) },
             exitTransition = { fadeOut(animationSpec = tween(400)) },
             popEnterTransition = { fadeIn(animationSpec = tween(400)) },
@@ -110,27 +111,38 @@ fun AppNavigation() {
                             restoreState = true
                         }
                     },
-                    modifier = Modifier
+                    modifier = Modifier,
+                    paddingValues = paddingValues
                 )
             }
 
             composable(Screen.TakeAttendance.route) {
-                TakeAttendanceScreen(modifier = Modifier)
+                TakeAttendanceScreen(
+                    modifier = Modifier,
+                    paddingValues = paddingValues
+                )
             }
 
             composable(Screen.Reports.route) {
-                ReportsScreen(modifier = Modifier)
+                ReportsScreen(
+                    modifier = Modifier,
+                    paddingValues = paddingValues
+                )
             }
 
             composable(Screen.Students.route) {
                 StudentsScreen(
                     onBack = { navController.popBackStack() },
-                    modifier = Modifier
+                    modifier = Modifier,
+                    paddingValues = paddingValues
                 )
             }
 
             composable(Screen.Classes.route) {
-                ClassesScreen(modifier = Modifier)
+                ClassesScreen(
+                    modifier = Modifier,
+                    paddingValues = paddingValues
+                )
             }
 
             composable(Screen.Settings.route) {

@@ -26,18 +26,12 @@ interface StudentDao {
     fun getStudentCountByClass(classId: Long): Flow<Int>
 
     @Query("""
-        SELECT CAST(
-            CASE WHEN totalCount = 0 THEN 0
-            ELSE (presentCount * 100.0 / totalCount)
-            END AS REAL
-        )
-        FROM (
-            SELECT 
-                COUNT(*) as totalCount,
-                SUM(CASE WHEN status = 'PRESENT' THEN 1 ELSE 0 END) as presentCount
-            FROM attendance 
-            WHERE studentId = :studentId AND classId = :classId
-        )
+        SELECT 
+            CASE WHEN COUNT(*) = 0 THEN 0.0
+            ELSE (SUM(CASE WHEN status = 'PRESENT' THEN 1.0 ELSE 0.0 END) * 100.0 / COUNT(*))
+            END
+        FROM attendance 
+        WHERE studentId = :studentId AND classId = :classId
     """)
     suspend fun getAttendancePercentage(studentId: Long, classId: Long): Double
 

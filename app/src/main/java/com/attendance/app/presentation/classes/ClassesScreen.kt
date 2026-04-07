@@ -34,13 +34,15 @@ import com.attendance.app.presentation.theme.*
 @Composable
 fun ClassesScreen(
     modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp),
     viewModel: ClassesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     ClassesContent(
         state = state,
         onEvent = viewModel::onEvent,
-        modifier = modifier
+        modifier = modifier,
+        paddingValues = paddingValues
     )
 }
 
@@ -48,17 +50,19 @@ fun ClassesScreen(
 private fun ClassesContent(
     state: ClassesState,
     onEvent: (ClassesEvent) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp)
 ) {
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         // Fixed Header
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
                 .background(PrimaryGreenDark)
-                .padding(top = 20.dp, bottom = 20.dp)
-                .padding(horizontal = 90.dp)
+                .statusBarsPadding()
+                .height(130.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "Manage Classes",
@@ -67,11 +71,21 @@ private fun ClassesContent(
                 fontWeight = FontWeight.Bold,
                 fontSize = 28.sp
             )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "${state.classes.size} classes total",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.9f),
+                fontWeight = FontWeight.Medium,
+                fontSize = 15.sp
+            )
         }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            contentPadding = PaddingValues(
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            )
         ) {
             // Add form
             item {
@@ -308,7 +322,8 @@ fun ClassesPreview() {
                 selectedClassId = 1,
                 isLoading = false
             ),
-            onEvent = {}
+            onEvent = {},
+            paddingValues = PaddingValues(0.dp)
         )
     }
 }
@@ -325,7 +340,8 @@ fun AddClassPreview() {
                 newClassSection = "6th Semester",
                 isLoading = false
             ),
-            onEvent = {}
+            onEvent = {},
+            paddingValues = PaddingValues(0.dp)
         )
     }
 }
@@ -339,7 +355,8 @@ fun EmptyClassesPreview() {
                 classes = emptyList(),
                 isLoading = false
             ),
-            onEvent = {}
+            onEvent = {},
+            paddingValues = PaddingValues(0.dp)
         )
     }
 }
