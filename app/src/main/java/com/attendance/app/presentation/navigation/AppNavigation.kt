@@ -1,5 +1,6 @@
 package com.attendance.app.presentation.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -111,12 +112,17 @@ fun AppNavigation() {
                             restoreState = true
                         }
                     },
-                    modifier = Modifier,
+                    modifier = Modifier.padding(bottom = if (showBottomBar) 0.dp else 0.dp), // Just to trigger recomposition if needed
                     paddingValues = paddingValues
                 )
             }
 
             composable(Screen.TakeAttendance.route) {
+                BackHandler {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
                 TakeAttendanceScreen(
                     modifier = Modifier,
                     paddingValues = paddingValues
@@ -124,6 +130,11 @@ fun AppNavigation() {
             }
 
             composable(Screen.Reports.route) {
+                BackHandler {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
                 ReportsScreen(
                     modifier = Modifier,
                     paddingValues = paddingValues
@@ -131,14 +142,28 @@ fun AppNavigation() {
             }
 
             composable(Screen.Students.route) {
+                BackHandler {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
                 StudentsScreen(
-                    onBack = { navController.popBackStack() },
+                    onBack = { 
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    },
                     modifier = Modifier,
                     paddingValues = paddingValues
                 )
             }
 
             composable(Screen.Classes.route) {
+                BackHandler {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
                 ClassesScreen(
                     modifier = Modifier,
                     paddingValues = paddingValues
@@ -146,8 +171,17 @@ fun AppNavigation() {
             }
 
             composable(Screen.Settings.route) {
+                BackHandler {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
                 SettingsScreen(
-                    onBack = { navController.popBackStack() },
+                    onBack = { 
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    },
                     modifier = Modifier
                 )
             }

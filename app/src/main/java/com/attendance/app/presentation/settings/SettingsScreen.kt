@@ -28,8 +28,11 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.attendance.app.presentation.theme.PrimaryGreen
+import com.attendance.app.presentation.theme.PrimaryGreenDark
+import com.attendance.app.presentation.theme.AttendanceTheme
 import com.attendance.app.R
-import com.attendance.app.presentation.theme.*
+import com.attendance.app.presentation.components.StandardHeader
 
 @Composable
 fun SettingsScreen(
@@ -112,40 +115,12 @@ private fun SettingsContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Fixed Header
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(headerBg)
-                .statusBarsPadding()
-                .height(115.dp)
-                .padding(top = 16.dp, bottom = 20.dp)
-                .padding(horizontal = 4.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = headerContent)
-                }
-                Spacer(modifier = Modifier.width(4.dp))
-                Column {
-                    Text(
-                        text = "Settings",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = headerContent,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Manage Your Preferences",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = headerContent.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 15.sp
-                    )
-                }
-            }
-        }
+        // Custom Settings Header
+        SettingsHeader(
+            title = "Settings",
+            subtitle = "Manage Your Preferences",
+            onBack = onBack
+        )
 
         LazyColumn(
             modifier = Modifier
@@ -206,6 +181,61 @@ private fun SettingsContent(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SettingsHeader(
+    title: String,
+    subtitle: String,
+    onBack: () -> Unit
+) {
+    val isDark = isSystemInDarkTheme()
+    val backgroundColor = if (isDark) MaterialTheme.colorScheme.surface else PrimaryGreenDark
+    val contentColor = if (isDark) MaterialTheme.colorScheme.onSurface else Color.White
+    val secondaryContentColor = contentColor.copy(alpha = if (isDark) 0.7f else 0.85f)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(backgroundColor)
+            .statusBarsPadding()
+            .padding(bottom = 20.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 8.dp,
+                    top = 16.dp).offset(y = 15.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = contentColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineMedium,
+                color = contentColor,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp
+            )
+        }
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = secondaryContentColor,
+            modifier = Modifier
+                .padding(start = 60.dp)
+                .offset(y = (8).dp),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
@@ -334,40 +364,11 @@ private fun SettingsActionItem(
 @Composable
 fun SettingsHeaderLightPreview() {
     AttendanceTheme(darkTheme = false) {
-        val headerBg = PrimaryGreenDark
-        val headerContent = Color.White
-        
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(headerBg)
-                .statusBarsPadding()
-                .height(115.dp)
-                .padding(top = 16.dp, bottom = 20.dp)
-                .padding(horizontal = 4.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = {}) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = headerContent)
-                }
-                Spacer(modifier = Modifier.width(4.dp))
-                Column {
-                    Text(
-                        text = "Settings",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = headerContent,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp
-                    )
-                    Text(
-                        text = "manage your preference",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = headerContent.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Normal
-                    )
-                }
-            }
-        }
+        SettingsHeader(
+            title = "Settings",
+            subtitle = "Manage Your Preferences",
+            onBack = {}
+        )
     }
 }
 
@@ -375,40 +376,11 @@ fun SettingsHeaderLightPreview() {
 @Composable
 fun SettingsHeaderDarkPreview() {
     AttendanceTheme(darkTheme = true) {
-        val headerBg = MaterialTheme.colorScheme.surface
-        val headerContent = MaterialTheme.colorScheme.onSurface
-        
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(headerBg)
-                .statusBarsPadding()
-                .height(115.dp)
-                .padding(top = 16.dp, bottom = 20.dp)
-                .padding(horizontal = 4.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = {}) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = headerContent)
-                }
-                Spacer(modifier = Modifier.width(4.dp))
-                Column {
-                    Text(
-                        text = "Settings",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = headerContent,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp
-                    )
-                    Text(
-                        text = "manage your preference",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = headerContent.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Normal
-                    )
-                }
-            }
-        }
+        SettingsHeader(
+            title = "Settings",
+            subtitle = "Manage Your Preferences",
+            onBack = {}
+        )
     }
 }
 

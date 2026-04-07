@@ -10,22 +10,7 @@ import com.attendance.app.domain.repository.ClassRepository
 import com.attendance.app.domain.repository.StudentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
@@ -75,28 +60,11 @@ class HomeViewModel @Inject constructor(
 
         classInfoFlow.flatMapLatest { (classes, selectedClass) ->
             if (selectedClass != null) {
-                val today = LocalDate.now().toString()
-                
-                // Combine everything reactively
                 combine(
                     studentRepository.getStudentsByClass(selectedClass.id),
                     attendanceRepository.getSessionDates(selectedClass.id)
                 ) { students, sessionDates ->
-                    
-                    val sessionFlows = sessionDates.map { date ->
-                        attendanceRepository.getSessionSummary(selectedClass.id, date).map { summary ->
-                            if (summary.totalStudents == 0) return@map null
-                            
-                            val records = attendanceRepository.getAttendanceByClassAndDate(selectedClass.id, date).firstOrNull() ?: emptyList()
-                            val studentStatuses = students.map { student ->
-                                val record = records.find { it.studentId == student.id }
-                                student.fullName to (record?.status == com.attendance.app.domain.model.AttendanceStatus.PRESENT)
-                            }
-                            SessionWithStudents(summary, studentStatuses)
-                        }
-                    }
-
-                    if (sessionFlows.isEmpty()) {
+                    if (sessionDates.isEmpty()) {
                         flowOf(HomeState(
                             classes = classes,
                             selectedClass = selectedClass,
@@ -107,21 +75,33 @@ class HomeViewModel @Inject constructor(
                             isLoading = false
                         ))
                     } else {
-                        combine(sessionFlows) { it.toList().filterNotNull().sortedByDescending { s -> s.summary.date } }
-                            .map { sessions ->
-                                val today = LocalDate.now().toString()
-                                val todaySession = sessions.find { it.summary.date == today }
-                                
-                                HomeState(
-                                    classes = classes,
-                                    selectedClass = selectedClass,
-                                    totalStudents = students.size,
-                                    presentToday = todaySession?.summary?.presentCount ?: 0,
-                                    absentToday = todaySession?.summary?.absentCount ?: 0,
-                                    recentSessions = sessions,
-                                    isLoading = false
-                                )
+                        val sessionFlows = sessionDates.map { date ->
+                            combine(
+                                attendanceRepository.getSessionSummary(selectedClass.id, date),
+                                attendanceRepository.getAttendanceByClassAndDate(selectedClass.id, date)
+                            ) { summary, records ->
+                                val studentStatuses = students.map { student ->
+                                    val record = records.find { it.studentId == student.id }
+                                    student.fullName to (record?.status == com.attendance.app.domain.model.AttendanceStatus.PRESENT)
+                                }
+                                SessionWithStudents(summary, studentStatuses)
                             }
+                        }
+
+                        combine(sessionFlows) { it.toList() }.map { sessions ->
+                            val today = LocalDate.now().toString()
+                            val todaySession = sessions.find { it.summary.date == today }
+                            
+                            HomeState(
+                                classes = classes,
+                                selectedClass = selectedClass,
+                                totalStudents = students.size,
+                                presentToday = todaySession?.summary?.presentCount ?: 0,
+                                absentToday = todaySession?.summary?.absentCount ?: 0,
+                                recentSessions = sessions.sortedByDescending { it.summary.date },
+                                isLoading = false
+                            )
+                        }
                     }
                 }.flatMapLatest { it }
             } else {

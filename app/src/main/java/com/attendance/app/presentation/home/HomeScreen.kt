@@ -121,7 +121,7 @@ private fun HomeContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                        .padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 8.dp), // Reduced bottom padding
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -134,26 +134,26 @@ private fun HomeContent(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.sp,
                         )
-                        Text(
-                            text = if (state.selectedClass?.section?.isNotEmpty() == true) 
-                                "${state.selectedClass.name} — ${state.selectedClass.section}" 
-                                else state.selectedClass?.name ?: "",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
+                        if (state.selectedClass != null) {
+                            Text(
+                                text = if (state.selectedClass.section.isNotEmpty()) 
+                                    "${state.selectedClass.name} — ${state.selectedClass.section}" 
+                                    else state.selectedClass.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
                     }
 
-                    Card(
+                    Surface(
                         onClick = onNavigateToReports,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        shape = RoundedCornerShape(100), // Perfect Pill shape
+                        color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                        shadowElevation = 2.dp
                     ) {
                         Text(
-                            text = "See all",
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            text = "See All",
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = if (isSystemInDarkTheme()) MaterialTheme.colorScheme.primary else PrimaryGreen
@@ -166,7 +166,7 @@ private fun HomeContent(
             item {
                 SessionsSummaryCard(
                     sessionCount = state.recentSessions.size,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp) // Removed top padding
                 )
             }
 

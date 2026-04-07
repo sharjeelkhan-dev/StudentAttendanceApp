@@ -5,6 +5,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material3.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.attendance.app.R
 import com.attendance.app.presentation.theme.AttendanceTheme
+import com.attendance.app.presentation.theme.PrimaryGreen
 import com.attendance.app.presentation.theme.PrimaryGreenDark
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -28,6 +30,7 @@ import java.util.Locale
 fun StandardHeader(
     title: String,
     subtitle: String,
+    onBackClick: (() -> Unit)? = null,
     showSettings: Boolean = false,
     showDate: Boolean = false,
     onSettingsClick: () -> Unit = {},
@@ -46,73 +49,86 @@ fun StandardHeader(
             .fillMaxWidth()
             .background(backgroundColor)
             .statusBarsPadding()
-            .height(115.dp)
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 12.dp),
+            .height(95.dp) // Optimized height for high-quality feel
+            .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        if (showDate || showSettings || showSave) {
+        // Top section for Back / Date / Save / Settings
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(30.dp), // Fixed height to keep title alignment consistent
+            contentAlignment = Alignment.CenterStart
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (showDate) {
-                    val dateFormatted = LocalDate.now().format(
-                        DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.ENGLISH)
-                    )
-                    Text(
-                        text = dateFormatted,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = secondaryContentColor,
-                        fontSize = 13.sp
-                    )
-                } else {
-                    Spacer(modifier = Modifier.weight(1f))
+                // Left side: Back button OR Date
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (onBackClick != null) {
+                        IconButton(
+                            onClick = onBackClick,
+                            modifier = Modifier.size(24.dp).offset(x = (-8).dp) // Slight offset for better alignment
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = contentColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    } else if (showDate) {
+                        val dateFormatted = LocalDate.now().format(
+                            DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.ENGLISH)
+                        )
+                        Text(
+                            text = dateFormatted,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = secondaryContentColor,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
                 
+                // Right side: Save / Settings
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (showSave) {
-                        Card(
+                        Surface(
                             onClick = onSaveClick,
                             enabled = !isSaving,
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isDark) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f) 
-                                                else Color.White.copy(alpha = 0.2f),
-                                contentColor = contentColor
-                            ),
-                            modifier = Modifier.height(32.dp)
+                            shape = RoundedCornerShape(100),
+                            color = if (isDark) MaterialTheme.colorScheme.primaryContainer else Color.White,
+                            modifier = Modifier.height(28.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .padding(horizontal = 12.dp),
-                                contentAlignment = Alignment.Center
+                            Row(
+                                modifier = Modifier.padding(horizontal = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
                             ) {
                                 if (isSaving) {
                                     CircularProgressIndicator(
-                                        modifier = Modifier.size(16.dp),
-                                        color = contentColor,
+                                        modifier = Modifier.size(12.dp),
+                                        color = if (isDark) MaterialTheme.colorScheme.onPrimaryContainer else PrimaryGreenDark,
                                         strokeWidth = 2.dp
                                     )
                                 } else {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            text = if (isSaved) "Saved" else "Save",
-                                            style = MaterialTheme.typography.labelLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            color = contentColor
+                                    Text(
+                                        text = if (isSaved) "Saved" else "Save",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        color = if (isDark) MaterialTheme.colorScheme.onPrimaryContainer else PrimaryGreenDark
+                                    )
+                                    if (isSaved) {
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = if (isDark) MaterialTheme.colorScheme.onPrimaryContainer else PrimaryGreenDark
                                         )
-                                        if (isSaved) {
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Icon(
-                                                imageVector = Icons.Default.Check,
-                                                contentDescription = null,
-                                                modifier = Modifier.size(14.dp),
-                                                tint = contentColor
-                                            )
-                                        }
                                     }
                                 }
                             }
@@ -129,7 +145,7 @@ fun StandardHeader(
                                 painter = painterResource(id = R.drawable.setting_icon),
                                 contentDescription = "Settings",
                                 tint = contentColor,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
@@ -142,15 +158,29 @@ fun StandardHeader(
             style = MaterialTheme.typography.headlineLarge,
             color = contentColor,
             fontWeight = FontWeight.Bold,
-            fontSize = 28.sp
+            fontSize = 27.sp,
+            lineHeight = 32.sp
         )
-        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = secondaryContentColor,
             fontWeight = FontWeight.Medium,
-            fontSize = 15.sp
+            fontSize = 14.sp,
+            lineHeight = 18.sp
+        )
+    }
+}
+
+@Preview(name = "Take Attendance Header")
+@Composable
+fun PreviewTakeAttendanceHeader() {
+    AttendanceTheme {
+        StandardHeader(
+            title = "Take Attendance",
+            subtitle = "Computer Science · 1 Present · 1 Absent",
+            showDate = true,
+            showSave = true
         )
     }
 }

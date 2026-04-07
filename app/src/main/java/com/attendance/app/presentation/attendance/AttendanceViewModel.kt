@@ -11,6 +11,7 @@ import com.attendance.app.domain.repository.AttendanceRepository
 import com.attendance.app.domain.repository.ClassRepository
 import com.attendance.app.domain.repository.StudentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -18,31 +19,27 @@ import javax.inject.Inject
 
 data class StudentAttendanceState(
     val student: Student,
-    val status: AttendanceStatus = AttendanceStatus.PRESENT
+    val status: AttendanceStatus
 )
 
 data class AttendanceState(
     val selectedClass: ClassModel? = null,
-    val date: String = LocalDate.now().toString(),
     val students: List<StudentAttendanceState> = emptyList(),
+    val presentCount: Int = 0,
+    val absentCount: Int = 0,
     val searchQuery: String = "",
     val isSaving: Boolean = false,
     val isSaved: Boolean = false,
     val isLoading: Boolean = true,
-    val presentCount: Int = 0,
-    val absentCount: Int = 0,
-    val error: String? = null,
-    val successMessage: String? = null
+    val error: String? = null
 )
 
 sealed class AttendanceEvent {
     data class ToggleStatus(val studentId: Long, val status: AttendanceStatus) : AttendanceEvent()
-    data object MarkAllPresent : AttendanceEvent()
-    data object MarkAllAbsent : AttendanceEvent()
+    object MarkAllPresent : AttendanceEvent()
+    object MarkAllAbsent : AttendanceEvent()
+    object SaveAttendance : AttendanceEvent()
     data class SearchQueryChanged(val query: String) : AttendanceEvent()
-    data object SaveAttendance : AttendanceEvent()
-    data object ClearError : AttendanceEvent()
-    data object ClearSuccess : AttendanceEvent()
 }
 
 @HiltViewModel
@@ -60,101 +57,112 @@ class AttendanceViewModel @Inject constructor(
         loadData()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadData() {
-        viewModelScope.launch {
-            preferencesManager.selectedClassIdFlow.collect { classId ->
-                if (classId != -1L) {
-                    val classModel = classRepository.getClassById(classId)
-                    _state.update { it.copy(selectedClass = classModel) }
+        preferencesManager.selectedClassIdFlow
+            .filter { it != -1L }
+            .flatMapLatest { classId ->
+                val classModelFlow = flow { emit(classRepository.getClassById(classId)) }
+                val studentsFlow = studentRepository.getStudentsByClass(classId)
+                val today = LocalDate.now().toString()
+                val attendanceFlow = attendanceRepository.getAttendanceByClassAndDate(classId, today)
 
-                    studentRepository.getStudentsByClass(classId).collect { students ->
-                        // Check if attendance already exists for today
-                        val today = LocalDate.now().toString()
-                        attendanceRepository.getAttendanceByClassAndDate(classId, today)
-                            .collect { existingRecords ->
-                                val studentStates = students.map { student ->
-                                    val existing = existingRecords.find { it.studentId == student.id }
-                                    StudentAttendanceState(
-                                        student = student,
-                                        status = existing?.status ?: AttendanceStatus.PRESENT
-                                    )
-                                }
-                                _state.update {
-                                    it.copy(
-                                        students = studentStates,
-                                        presentCount = studentStates.count { s -> s.status == AttendanceStatus.PRESENT },
-                                        absentCount = studentStates.count { s -> s.status == AttendanceStatus.ABSENT },
-                                        isLoading = false
-                                    )
-                                }
-                            }
+                combine(classModelFlow, studentsFlow, attendanceFlow) { classModel, students, existingRecords ->
+                    val studentStates = students.map { student ->
+                        val existing = existingRecords.find { it.studentId == student.id }
+                        StudentAttendanceState(
+                            student = student,
+                            status = existing?.status ?: AttendanceStatus.PRESENT
+                        )
                     }
+                    AttendanceState(
+                        selectedClass = classModel,
+                        students = studentStates,
+                        presentCount = studentStates.count { s -> s.status == AttendanceStatus.PRESENT },
+                        absentCount = studentStates.count { s -> s.status == AttendanceStatus.ABSENT },
+                        isLoading = false
+                    )
                 }
             }
-        }
+            .onEach { newState -> 
+                _state.update { 
+                    it.copy(
+                        selectedClass = newState.selectedClass,
+                        students = newState.students,
+                        presentCount = newState.presentCount,
+                        absentCount = newState.absentCount,
+                        isLoading = false
+                    ) 
+                } 
+            }
+            .catch { e -> _state.update { it.copy(isLoading = false, error = e.message) } }
+            .launchIn(viewModelScope)
     }
 
     fun onEvent(event: AttendanceEvent) {
         when (event) {
             is AttendanceEvent.ToggleStatus -> {
-                val updated = _state.value.students.map { s ->
-                    if (s.student.id == event.studentId) s.copy(status = event.status) else s
-                }
-                _state.update {
-                    it.copy(
-                        students = updated,
-                        presentCount = updated.count { s -> s.status == AttendanceStatus.PRESENT },
-                        absentCount = updated.count { s -> s.status == AttendanceStatus.ABSENT }
+                _state.update { state ->
+                    val updatedStudents = state.students.map {
+                        if (it.student.id == event.studentId) it.copy(status = event.status)
+                        else it
+                    }
+                    state.copy(
+                        students = updatedStudents,
+                        presentCount = updatedStudents.count { it.status == AttendanceStatus.PRESENT },
+                        absentCount = updatedStudents.count { it.status == AttendanceStatus.ABSENT },
+                        isSaved = false
                     )
                 }
             }
-            is AttendanceEvent.MarkAllPresent -> {
-                val updated = _state.value.students.map { it.copy(status = AttendanceStatus.PRESENT) }
-                _state.update {
-                    it.copy(
-                        students = updated,
-                        presentCount = updated.size,
-                        absentCount = 0
+            AttendanceEvent.MarkAllPresent -> {
+                _state.update { state ->
+                    val updatedStudents = state.students.map { it.copy(status = AttendanceStatus.PRESENT) }
+                    state.copy(
+                        students = updatedStudents,
+                        presentCount = updatedStudents.size,
+                        absentCount = 0,
+                        isSaved = false
                     )
                 }
             }
-            is AttendanceEvent.MarkAllAbsent -> {
-                val updated = _state.value.students.map { it.copy(status = AttendanceStatus.ABSENT) }
-                _state.update {
-                    it.copy(
-                        students = updated,
+            AttendanceEvent.MarkAllAbsent -> {
+                _state.update { state ->
+                    val updatedStudents = state.students.map { it.copy(status = AttendanceStatus.ABSENT) }
+                    state.copy(
+                        students = updatedStudents,
                         presentCount = 0,
-                        absentCount = updated.size
+                        absentCount = updatedStudents.size,
+                        isSaved = false
                     )
                 }
+            }
+            AttendanceEvent.SaveAttendance -> {
+                saveAttendance()
             }
             is AttendanceEvent.SearchQueryChanged -> {
                 _state.update { it.copy(searchQuery = event.query) }
             }
-            is AttendanceEvent.SaveAttendance -> saveAttendance()
-            is AttendanceEvent.ClearError -> _state.update { it.copy(error = null) }
-            is AttendanceEvent.ClearSuccess -> _state.update { it.copy(successMessage = null) }
         }
     }
 
     private fun saveAttendance() {
+        val currentState = _state.value
+        val classId = currentState.selectedClass?.id ?: return
+        val date = LocalDate.now().toString()
+
         viewModelScope.launch {
-            try {
-                _state.update { it.copy(isSaving = true) }
-                val classId = _state.value.selectedClass?.id ?: return@launch
-                val records = _state.value.students.map { s ->
-                    AttendanceRecord(
-                        studentId = s.student.id,
-                        classId = classId,
-                        date = _state.value.date,
-                        status = s.status
-                    )
-                }
-                attendanceRepository.saveAttendance(records)
-                _state.update { it.copy(isSaving = false, isSaved = true, successMessage = "Attendance saved successfully!") }
-            } catch (e: Exception) {
-                _state.update { it.copy(isSaving = false, error = "Failed to save attendance: ${e.message}") }
+            _state.update { it.copy(isSaving = true) }
+            val records = currentState.students.map {
+                AttendanceRecord(
+                    studentId = it.student.id,
+                    classId = classId,
+                    date = date,
+                    status = it.status
+                )
             }
+            attendanceRepository.saveAttendance(records)
+            _state.update { it.copy(isSaving = false, isSaved = true) }
         }
     }
 }
