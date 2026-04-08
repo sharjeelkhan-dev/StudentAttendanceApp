@@ -185,7 +185,9 @@ private fun ReportsContent(
 
             VerticalScrollbar(
                 lazyListState = listState,
-                modifier = Modifier.align(Alignment.CenterEnd)
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 4.dp, top = 12.dp, bottom = 12.dp)
             )
         }
     }

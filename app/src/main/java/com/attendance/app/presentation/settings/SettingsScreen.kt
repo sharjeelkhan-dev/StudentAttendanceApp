@@ -283,7 +283,7 @@ private fun SettingsToggleItem(
                 .padding(horizontal = 20.dp, vertical = 8.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.surface,
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
             onClick = { onToggle(!isChecked) }
@@ -315,12 +315,12 @@ private fun SettingsToggleItem(
                         text = title, 
                         style = MaterialTheme.typography.titleMedium, 
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = subtitle, 
                         style = MaterialTheme.typography.bodySmall, 
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Switch(
@@ -359,7 +359,7 @@ private fun SettingsActionItem(
                 .padding(horizontal = 20.dp, vertical = 4.dp),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.surface,
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
             onClick = onClick
@@ -391,18 +391,18 @@ private fun SettingsActionItem(
                         text = title, 
                         style = MaterialTheme.typography.titleMedium, 
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = subtitle, 
                         style = MaterialTheme.typography.bodySmall, 
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = Color.Gray.copy(alpha = 0.4f)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                 )
             }
         }

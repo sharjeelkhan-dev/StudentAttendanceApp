@@ -297,14 +297,13 @@ private fun QuickActionButton(
     isHighlighted: Boolean = false,
     onClick: () -> Unit
 ) {
-    val isDark = LocalIsDarkMode.current
     val bgColor = if (isHighlighted) {
-        if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
+        MaterialTheme.colorScheme.primary
     } else {
-        if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color.White
+        MaterialTheme.colorScheme.surfaceVariant
     }
     val contentColor = if (isHighlighted) {
-        if (isDark) MaterialTheme.colorScheme.onPrimary else Color.White
+        MaterialTheme.colorScheme.onPrimary
     } else MaterialTheme.colorScheme.onSurfaceVariant
 
     val iconPainter = when (icon) {

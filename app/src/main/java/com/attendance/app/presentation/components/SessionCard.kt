@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -198,9 +199,22 @@ fun SessionCard(
                             Text(
                                 text = initials,
                                 fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isPresent) AvatarTextColor else getAvatarColor(name)
+                                fontWeight = FontWeight.ExtraBold,
+                                color = if (isPresent) AvatarTextColor
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                             )
+
+                            if (!isPresent) {
+                                androidx.compose.foundation.Canvas(modifier = Modifier.matchParentSize()) {
+                                    drawLine(
+                                        color = Color.Red.copy(alpha = 0.5f),
+                                        start = androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height * 0.5f),
+                                        end = androidx.compose.ui.geometry.Offset(size.width * 0.8f, size.height * 0.5f),
+                                        strokeWidth = 1.5.dp.toPx(),
+                                        cap = StrokeCap.Round
+                                    )
+                                }
+                            }
                         }
                     }
                 }

@@ -17,6 +17,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
@@ -26,7 +29,17 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Enable edge-to-edge support
         enableEdgeToEdge()
+        
+        // Hide the navigation bar for a cleaner "Immersive" look
+        // The bar will reappear transiently when the user swipes from the bottom
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.navigationBars())
+        }
+
         setContent {
             val isDarkMode by preferencesManager.darkModeFlow.collectAsStateWithLifecycle(initialValue = false)
             val isBiometricEnabled by preferencesManager.biometricEnabledFlow.collectAsStateWithLifecycle(initialValue = false)

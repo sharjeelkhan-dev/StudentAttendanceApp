@@ -1,5 +1,4 @@
 package com.attendance.app.presentation.components
-
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -10,7 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -18,106 +16,127 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.attendance.app.presentation.theme.LocalIsDarkMode
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun VerticalScrollbar(
     lazyListState: LazyListState,
     modifier: Modifier = Modifier,
-    thickness: Dp = 5.dp,
+    thickness: Dp = 3.dp,
     color: Color? = null
 ) {
     val isDark = LocalIsDarkMode.current
     val scrollbarColor = color ?: if (isDark) {
-        Color.White.copy(alpha = 0.8f)
+        Color.White.copy(alpha = 0.5f)
     } else {
-        Color.Black.copy(alpha = 0.45f)
+        Color.Black.copy(alpha = 0.3f)
     }
 
-    // State for scrollbar visibility
+    // Scrollbar visibility state
     var isVisible by remember { mutableStateOf(false) }
 
-    // Efficiently calculate scroll metrics using derivedStateOf
+    // Use derivedStateOf to efficiently compute scroll metrics only when layout changes.
+    // This minimizes recompositions during scroll if the results don't change.
     val scrollbarMetrics by remember {
         derivedStateOf {
             val layoutInfo = lazyListState.layoutInfo
             val visibleItems = layoutInfo.visibleItemsInfo
-            val totalItems = layoutInfo.totalItemsCount
+            if (visibleItems.isEmpty()) return@derivedStateOf null
 
-            if (visibleItems.isEmpty() || totalItems == 0) return@derivedStateOf null
-
+            val totalItemsCount = layoutInfo.totalItemsCount
             val viewportHeight = layoutInfo.viewportSize.height.toFloat()
             if (viewportHeight <= 0f) return@derivedStateOf null
 
-            // Calculate average height of visible items for accurate estimation
+            // Estimate total height using the average size of visible items.
+            // This is more robust than using a fixed estimate for lists with variable item heights.
             val firstItem = visibleItems.first()
             val lastItem = visibleItems.last()
             val visibleHeight = lastItem.offset + lastItem.size - firstItem.offset
             val averageItemHeight = visibleHeight.toFloat() / visibleItems.size
-
-            // Estimate total scrollable content height including paddings
-            val estimatedTotalHeight = (averageItemHeight * totalItems) +
+            
+            val estimatedTotalHeight = (averageItemHeight * totalItemsCount) +
                     layoutInfo.beforeContentPadding + layoutInfo.afterContentPadding
 
-            // If content fits in viewport, hide scrollbar handle
-            if (estimatedTotalHeight <= viewportHeight) return@derivedStateOf null
+            // Hide scrollbar if content is smaller than viewport (with a small epsilon)
+            if (estimatedTotalHeight <= viewportHeight + 1) return@derivedStateOf null
 
-            // Calculate current scroll position in pixels relative to viewport start
+            // Calculate pixel-based scroll progress
             val scrolledPixels = (firstItem.index * averageItemHeight) + 
-                    (layoutInfo.viewportStartOffset - firstItem.offset)
+                    lazyListState.firstVisibleItemScrollOffset
+            
+            val scrollRange = (estimatedTotalHeight - viewportHeight).coerceAtLeast(1f)
+            
+            // Determine scroll percentage (0 to 1), snapping to boundaries for accuracy
+            val scrollPercent = when {
+                !lazyListState.canScrollBackward -> 0f
+                !lazyListState.canScrollForward -> 1f
+                else -> (scrolledPixels / scrollRange).coerceIn(0f, 1f)
+            }
+            
+            // Determine handle size as a fraction of viewport (bounded for visibility)
+            val visiblePercent = (viewportHeight / estimatedTotalHeight).coerceIn(0.1f, 0.9f)
 
-            // Map content scroll progress to handle position and size
-            val heightFraction = (viewportHeight / estimatedTotalHeight).coerceIn(0.1f, 0.9f)
-            val scrollPositionFraction = (scrolledPixels / (estimatedTotalHeight - viewportHeight)).coerceIn(0f, 1f)
-
-            scrollPositionFraction to heightFraction
+            scrollPercent to visiblePercent
         }
     }
 
-    // Handle auto-hide logic based on scrolling activity
-    val isScrolling = lazyListState.isScrollInProgress
-    val firstVisibleItemIndex by remember { derivedStateOf { lazyListState.firstVisibleItemIndex } }
-    val firstVisibleItemScrollOffset by remember { derivedStateOf { lazyListState.firstVisibleItemScrollOffset } }
-
-    LaunchedEffect(isScrolling, firstVisibleItemIndex, firstVisibleItemScrollOffset) {
-        isVisible = true
-        if (!isScrolling) {
-            delay(2000)
-            isVisible = false
+    // Handle auto-hide logic: Show on scroll/movement, hide after 1.5s of inactivity.
+    // snapshotFlow is used to monitor high-frequency state changes efficiently.
+    LaunchedEffect(lazyListState) {
+        snapshotFlow {
+            Triple(
+                lazyListState.firstVisibleItemIndex,
+                lazyListState.firstVisibleItemScrollOffset,
+                lazyListState.isScrollInProgress
+            )
+        }.collectLatest {
+            isVisible = true
+            if (!lazyListState.isScrollInProgress) {
+                delay(1500)
+                isVisible = false
+            }
         }
     }
 
+    // Smooth visibility transition
     val alpha by animateFloatAsState(
         targetValue = if (isVisible && scrollbarMetrics != null) 1f else 0f,
-        animationSpec = tween(durationMillis = 300),
-        label = "scrollbarAlpha"
+        animationSpec = tween(durationMillis = 400),
+        label = "ScrollbarAlpha"
     )
 
-    val metrics = scrollbarMetrics ?: return
+    // Keep track of last metrics to avoid jumps or disappearing handles during fade-out
+    val lastMetrics = remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    SideEffect {
+        scrollbarMetrics?.let { lastMetrics.value = it }
+    }
 
-    BoxWithConstraints(
-        modifier = modifier
-            .fillMaxHeight()
-            .width(thickness + 12.dp) // Hit area for potential interaction
-            .padding(vertical = 4.dp)
-            .alpha(alpha),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        val trackHeight = maxHeight
-        val handleHeight = (trackHeight * metrics.second).coerceAtLeast(32.dp)
-        val scrollPosition = metrics.first
+    val metrics = lastMetrics.value
+    if (alpha > 0f && metrics != null) {
+        BoxWithConstraints(
+            modifier = modifier
+                .fillMaxHeight()
+                .width(thickness + 8.dp) // Hit area for potential interaction
+                .graphicsLayer { this.alpha = alpha }, // Use graphicsLayer for efficient alpha
+            contentAlignment = Alignment.TopCenter
+        ) {
+            val trackHeight = maxHeight
+            val handleHeight = (trackHeight * metrics.second).coerceAtLeast(32.dp)
+            val scrollPosition = metrics.first
 
-        Box(
-            modifier = Modifier
-                .width(thickness)
-                .height(handleHeight)
-                .graphicsLayer {
-                    // Smooth translation using graphicsLayer to avoid layout passes during scroll
-                    val maxTravel = (trackHeight - handleHeight).toPx()
-                    translationY = scrollPosition * maxTravel
-                }
-                .clip(CircleShape)
-                .background(scrollbarColor)
-        )
+            Box(
+                modifier = Modifier
+                    .width(thickness)
+                    .height(handleHeight)
+                    .graphicsLayer {
+                        // Use translationY in graphicsLayer to skip layout passes during scroll
+                        val maxTravel = (trackHeight - handleHeight).toPx()
+                        translationY = scrollPosition * maxTravel
+                    }
+                    .clip(CircleShape)
+                    .background(scrollbarColor)
+            )
+        }
     }
 }
