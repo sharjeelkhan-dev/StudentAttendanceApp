@@ -148,13 +148,6 @@ fun AppNavigation() {
                         onNavigateToSettings = {
                             navController.navigate(Screen.Settings.route)
                         },
-                        onNavigateToClasses = {
-                            navController.navigate(Screen.Classes.route) {
-                                popUpTo(Screen.Home.route) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
                         modifier = Modifier.padding(bottom = if (showBottomBar) 0.dp else 0.dp),
                         paddingValues = paddingValues
                     )

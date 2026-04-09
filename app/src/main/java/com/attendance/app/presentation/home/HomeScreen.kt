@@ -30,7 +30,6 @@ fun HomeScreen(
     onNavigateToReports: () -> Unit,
     onNavigateToStudents: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToClasses: () -> Unit,
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues(0.dp),
     viewModel: HomeViewModel = hiltViewModel()
