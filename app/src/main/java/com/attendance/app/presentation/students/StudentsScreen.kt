@@ -1,11 +1,12 @@
 package com.attendance.app.presentation.students
-
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,9 +37,12 @@ import com.attendance.app.presentation.components.StandardHeader
 import com.attendance.app.presentation.components.VerticalScrollbar
 import com.attendance.app.presentation.theme.*
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun StudentsScreen(
+fun SharedTransitionScope.StudentsScreen(
     onBack: () -> Unit,
+    onStudentClick: (Student, Color) -> Unit,
+    animatedVisibilityScope: AnimatedContentScope,
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues(0.dp),
     viewModel: StudentsViewModel = hiltViewModel()
@@ -69,6 +73,8 @@ fun StudentsScreen(
         StudentsContent(
             state = state,
             onBack = onBack,
+            onStudentClick = onStudentClick,
+            animatedVisibilityScope = animatedVisibilityScope,
             onEvent = viewModel::onEvent,
             modifier = Modifier.fillMaxSize().padding(innerPadding),
             paddingValues = paddingValues
@@ -76,10 +82,13 @@ fun StudentsScreen(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun StudentsContent(
+private fun SharedTransitionScope.StudentsContent(
     state: StudentsState,
     onBack: () -> Unit,
+    onStudentClick: (Student, Color) -> Unit,
+    animatedVisibilityScope: AnimatedContentScope,
     onEvent: (StudentsEvent) -> Unit,
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues(0.dp)
@@ -140,18 +149,23 @@ private fun StudentsContent(
                     }
                 } else {
                     items(
-                        state.students.sortedByDescending { it.student.createdAt }, 
+                        state.students,
                         key = { it.student.id }
                     ) { studentWithPct ->
+                        val avatarColor = remember(studentWithPct.student.fullName) {
+                            getAvatarColor(studentWithPct.student.fullName)
+                        }
                         StudentRow(
                             initials = studentWithPct.student.initials,
                             name = studentWithPct.student.fullName,
                             rollNumber = studentWithPct.student.rollNumber,
                             attendancePercentage = studentWithPct.attendancePercentage,
                             createdAt = studentWithPct.student.createdAt,
-                            avatarColor = getAvatarColor(studentWithPct.student.fullName),
+                            avatarColor = avatarColor,
+                            animatedVisibilityScope = animatedVisibilityScope,
                             onEdit = { onEvent(StudentsEvent.StartEditStudent(studentWithPct.student)) },
-                            onDelete = { onEvent(StudentsEvent.DeleteStudent(studentWithPct.student)) }
+                            onDelete = { onEvent(StudentsEvent.DeleteStudent(studentWithPct.student)) },
+                            onClick = { onStudentClick(studentWithPct.student, avatarColor) }
                         )
                     }
                 }
@@ -330,127 +344,123 @@ private fun AddStudentForm(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
-private fun StudentRow(
+private fun SharedTransitionScope.StudentRow(
     initials: String,
     name: String,
     rollNumber: String,
     attendancePercentage: Double,
     createdAt: Long,
     avatarColor: Color,
+    animatedVisibilityScope: AnimatedContentScope,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    CompositionLocalProvider(
+        LocalRippleConfiguration provides RippleConfiguration(
+            color = Color.Gray.copy(alpha = 0.15f)
+        )
     ) {
-        Row(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            onClick = onClick
         ) {
-            // Avatar
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(avatarColor),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = initials,
-                    color = AvatarTextColor,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // Avatar (Shared Element)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .sharedElement(
+                            rememberSharedContentState(key = "avatar-$rollNumber"),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        )
+                        .clip(CircleShape)
+                        .background(avatarColor),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = rollNumber,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        text = initials,
+                        color = AvatarTextColor,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = " • ",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        text = name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.sharedElement(
+                            rememberSharedContentState(key = "name-$rollNumber"),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        )
                     )
 
-                    val enrolledDate = remember(createdAt) {
-                        java.time.Instant.ofEpochMilli(createdAt)
-                            .atZone(java.time.ZoneId.systemDefault())
-                            .format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = rollNumber,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+
+                        Text(
+                            text = " • ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        )
+
+                        val enrolledDate = remember(createdAt) {
+                            java.time.Instant.ofEpochMilli(createdAt)
+                                .atZone(java.time.ZoneId.systemDefault())
+                                .format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                        }
+
+                        Text(
+                            text = "Enrolled $enrolledDate",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            fontSize = 11.sp
+                        )
                     }
+                }
 
-                    Text(
-                        text = "Enrolled $enrolledDate",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        fontSize = 11.sp
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Edit
+                IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.pencil_circle),
+                        contentDescription = "Edit",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                // Delete
+                IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.recycle_bin_icon),
+                        contentDescription = "Delete",
+                        tint = AbsentRed.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Edit
-            IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
-                Icon(
-                    painter = painterResource(id = R.drawable.pencil_circle),
-                    contentDescription = "Edit",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            // Delete
-            IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                Icon(
-                    painter = painterResource(id = R.drawable.recycle_bin_icon),
-                    contentDescription = "Delete",
-                    tint = AbsentRed.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun StudentsPreview() {
-    AttendanceTheme {
-        StudentsContent(
-            state = StudentsState(
-                selectedClass = ClassModel(name = "Software Engineering", section = "6C1"),
-                students = listOf(
-                    StudentWithPercentage(
-                        student = Student(id = 1, fullName = "John Doe", rollNumber = "101", classId = 1),
-                        attendancePercentage = 85.0
-                    )
-                ),
-                isLoading = false
-            ),
-            onBack = {},
-            onEvent = {},
-            paddingValues = PaddingValues(0.dp)
-        )
     }
 }

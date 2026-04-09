@@ -223,6 +223,7 @@ private fun AttendanceContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AttendanceStudentRow(
     studentState: StudentAttendanceState,
@@ -230,85 +231,93 @@ private fun AttendanceStudentRow(
     onToggle: (AttendanceStatus) -> Unit
 ) {
     val isDark = LocalIsDarkMode.current
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    
+    CompositionLocalProvider(
+        LocalRippleConfiguration provides RippleConfiguration(
+            color = Color.Gray.copy(alpha = 0.15f)
+        )
     ) {
-        Row(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 20.dp, vertical = 6.dp),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            onClick = { /* Could navigate or show details */ }
         ) {
-            // Avatar
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(avatarColor),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = studentState.student.initials,
-                    color = AvatarTextColor,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                // Avatar
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(avatarColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = studentState.student.initials,
+                        color = AvatarTextColor,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-            Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-            // Name and roll
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = studentState.student.fullName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = studentState.student.rollNumber,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            }
+                // Name and roll
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = studentState.student.fullName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = studentState.student.rollNumber,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
 
-            // Present button
-            val isPresentSelected = studentState.status == AttendanceStatus.PRESENT
-            Button(
-                onClick = { onToggle(AttendanceStatus.PRESENT) },
-                modifier = Modifier.size(40.dp),
-                shape = RoundedCornerShape(28.dp),
-                contentPadding = PaddingValues(0.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isPresentSelected) PresentGreen else if (isDark) DividerColorDark else PresentGreen.copy(alpha = 0.1f),
-                    contentColor = if (isPresentSelected) Color.White else PresentGreen
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = if (isPresentSelected) 4.dp else 0.dp)
-            ) {
-                Text("P", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
+                // Present button
+                val isPresentSelected = studentState.status == AttendanceStatus.PRESENT
+                Button(
+                    onClick = { onToggle(AttendanceStatus.PRESENT) },
+                    modifier = Modifier.size(40.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isPresentSelected) PresentGreen else if (isDark) DividerColorDark else PresentGreen.copy(alpha = 0.1f),
+                        contentColor = if (isPresentSelected) Color.White else PresentGreen
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = if (isPresentSelected) 4.dp else 0.dp)
+                ) {
+                    Text("P", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
 
-            Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-            // Absent button
-            val isAbsentSelected = studentState.status == AttendanceStatus.ABSENT
-            Button(
-                onClick = { onToggle(AttendanceStatus.ABSENT) },
-                modifier = Modifier.size(40.dp),
-                shape = RoundedCornerShape(28.dp),
-                contentPadding = PaddingValues(0.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isAbsentSelected) AbsentRed else if (isDark) DividerColorDark else AbsentRed.copy(alpha = 0.1f),
-                    contentColor = if (isAbsentSelected) Color.White else AbsentRed
-                ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = if (isAbsentSelected) 4.dp else 0.dp)
-            ) {
-                Text("A", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                // Absent button
+                val isAbsentSelected = studentState.status == AttendanceStatus.ABSENT
+                Button(
+                    onClick = { onToggle(AttendanceStatus.ABSENT) },
+                    modifier = Modifier.size(40.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isAbsentSelected) AbsentRed else if (isDark) DividerColorDark else AbsentRed.copy(alpha = 0.1f),
+                        contentColor = if (isAbsentSelected) Color.White else AbsentRed
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = if (isAbsentSelected) 4.dp else 0.dp)
+                ) {
+                    Text("A", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
             }
         }
     }

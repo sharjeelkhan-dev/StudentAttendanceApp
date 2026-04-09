@@ -1,12 +1,6 @@
 package com.attendance.app.presentation.classes
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,7 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -72,61 +65,61 @@ private fun ClassesContent(
                 subtitle = "${state.classes.size} classes total"
             )
 
-        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    bottom = paddingValues.calculateBottomPadding() + 80.dp // Extra padding for FAB
-                )
-            ) {
-                // Classes Header
-                item {
-                    Text(
-                        text = "YOUR CLASSES",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha=0.6f),
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+            Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        bottom = paddingValues.calculateBottomPadding() + 80.dp // Extra padding for FAB
                     )
-                }
-
-                if (state.classes.isEmpty() && !state.isLoading) {
+                ) {
+                    // Classes Header
                     item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No classes yet.\nCreate your first class to get started!",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha=0.6f),
-                                textAlign = TextAlign.Center
+                        Text(
+                            text = "YOUR CLASSES",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha=0.6f),
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                        )
+                    }
+
+                    if (state.classes.isEmpty() && !state.isLoading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No classes yet.\nCreate your first class to get started!",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha=0.6f),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    } else {
+                        items(state.classes, key = { it.id }) { classModel ->
+                            val isSelected = classModel.id == state.selectedClassId
+                            ClassRow(
+                                classModel = classModel,
+                                isSelected = isSelected,
+                                onSelect = { onEvent(ClassesEvent.SelectClass(classModel)) },
+                                onEdit = { onEvent(ClassesEvent.StartEdit(classModel)) },
+                                onDelete = { onEvent(ClassesEvent.DeleteClass(classModel)) }
                             )
                         }
                     }
-                } else {
-                    items(state.classes, key = { it.id }) { classModel ->
-                        val isSelected = classModel.id == state.selectedClassId
-                        ClassRow(
-                            classModel = classModel,
-                            isSelected = isSelected,
-                            onSelect = { onEvent(ClassesEvent.SelectClass(classModel)) },
-                            onEdit = { onEvent(ClassesEvent.StartEdit(classModel)) },
-                            onDelete = { onEvent(ClassesEvent.DeleteClass(classModel)) }
-                        )
-                    }
                 }
-            }
 
-            VerticalScrollbar(
-                lazyListState = listState,
-                modifier = Modifier.align(Alignment.CenterEnd)
-            )
-        }
+                VerticalScrollbar(
+                    lazyListState = listState,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                )
+            }
         }
 
         // Floating Action Button at Bottom Right
@@ -259,86 +252,92 @@ private fun ClassRow(
     val contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
     val secondaryContentColor = if (isSelected) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 8.dp else 4.dp),
-        onClick = onSelect
+    CompositionLocalProvider(
+        LocalRippleConfiguration provides RippleConfiguration(
+            color = if (isSelected) Color.White.copy(alpha = 0.2f) else Color.Gray.copy(alpha = 0.15f)
+        )
     ) {
-        Row(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = containerColor
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 8.dp else 4.dp),
+            onClick = onSelect
         ) {
-            // Accent Dot for consistency
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(if (isSelected) Color.White else primaryColor.copy(alpha = 0.3f))
-            )
-            
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = classModel.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = contentColor
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Accent Dot for consistency
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(if (isSelected) Color.White else primaryColor.copy(alpha = 0.3f))
                 )
                 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (classModel.section.isNotBlank()) {
-                        Text(
-                            text = classModel.section,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = secondaryContentColor
-                        )
-                        Text(
-                            text = " • ",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = secondaryContentColor.copy(alpha = 0.5f)
-                        )
-                    }
-                    
-                    val dateFormatted = remember(classModel.createdAt) {
-                        java.time.Instant.ofEpochMilli(classModel.createdAt)
-                            .atZone(java.time.ZoneId.systemDefault())
-                            .format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
-                    }
-                    
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Created $dateFormatted",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = secondaryContentColor,
-                        fontSize = 11.sp
+                        text = classModel.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = contentColor
+                    )
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (classModel.section.isNotBlank()) {
+                            Text(
+                                text = classModel.section,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = secondaryContentColor
+                            )
+                            Text(
+                                text = " • ",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = secondaryContentColor.copy(alpha = 0.5f)
+                            )
+                        }
+                        
+                        val dateFormatted = remember(classModel.createdAt) {
+                            java.time.Instant.ofEpochMilli(classModel.createdAt)
+                                .atZone(java.time.ZoneId.systemDefault())
+                                .format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"))
+                        }
+                        
+                        Text(
+                            text = "Created $dateFormatted",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = secondaryContentColor,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.pencil_circle),
+                        contentDescription = "Edit",
+                        tint = if (isSelected) Color.White.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.6f),
+                        modifier = Modifier.size(24.dp)
                     )
                 }
-            }
-
-            IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    painter = painterResource(id = R.drawable.pencil_circle),
-                    contentDescription = "Edit",
-                    tint = if (isSelected) Color.White.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.6f),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    painter = painterResource(id = R.drawable.recycle_bin_icon),
-                    contentDescription = "Delete",
-                    tint = if (isSelected) Color.White.copy(alpha = 0.9f)
-                    else AbsentRed.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
-                )
+                IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.recycle_bin_icon),
+                        contentDescription = "Delete",
+                        tint = if (isSelected) Color.White.copy(alpha = 0.9f)
+                        else AbsentRed.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }

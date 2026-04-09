@@ -27,6 +27,24 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
+fun HeaderContainer(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val backgroundColor = PrimaryGreenDark
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(backgroundColor)
+            .statusBarsPadding()
+            .height(95.dp) // Optimized height for high-quality feel
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.Center,
+        content = content
+    )
+}
+
+@Composable
 fun StandardHeader(
     title: String,
     subtitle: String,

@@ -116,10 +116,10 @@ private fun SettingsContent(
             modifier = Modifier.fillMaxSize()
         ) {
             // Custom Settings Header
-            SettingsHeader(
+            StandardHeader(
                 title = "Settings",
                 subtitle = "Manage Your Preferences",
-                onBack = onBack
+                onBackClick = onBack
             )
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -192,60 +192,6 @@ private fun SettingsContent(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun SettingsHeader(
-    title: String,
-    subtitle: String,
-    onBack: () -> Unit
-) {
-    val backgroundColor = PrimaryGreenDark
-    val contentColor = Color.White
-    val secondaryContentColor = contentColor.copy(alpha = 0.85f)
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(backgroundColor)
-            .statusBarsPadding()
-            .padding(bottom = 20.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 8.dp, end = 8.dp,
-                    top = 16.dp).offset(y = 15.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = contentColor,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineMedium,
-                color = contentColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp
-            )
-        }
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = secondaryContentColor,
-            modifier = Modifier
-                .padding(start = 60.dp)
-                .offset(y = (8).dp),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-        )
     }
 }
 
@@ -409,31 +355,7 @@ private fun SettingsActionItem(
     }
 }
 
-@Preview(showBackground = true, name = "Settings Header Light")
-@Composable
-fun SettingsHeaderLightPreview() {
-    AttendanceTheme(darkTheme = false) {
-        SettingsHeader(
-            title = "Settings",
-            subtitle = "Manage Your Preferences",
-            onBack = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Settings Header Dark")
-@Composable
-fun SettingsHeaderDarkPreview() {
-    AttendanceTheme(darkTheme = true) {
-        SettingsHeader(
-            title = "Settings",
-            subtitle = "Manage Your Preferences",
-            onBack = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Settings Preview")
 @Composable
 fun SettingsPreview() {
     AttendanceTheme(darkTheme = false) {

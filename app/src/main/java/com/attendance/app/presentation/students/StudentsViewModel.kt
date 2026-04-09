@@ -8,12 +8,14 @@ import com.attendance.app.domain.model.Student
 import com.attendance.app.domain.repository.ClassRepository
 import com.attendance.app.domain.repository.StudentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 data class StudentWithPercentage(
@@ -64,13 +66,15 @@ class StudentsViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeData() {
         preferencesManager.selectedClassIdFlow
+            .onEach { _state.update { it.copy(isLoading = true) } }
             .flatMapLatest { classId ->
                 if (classId != -1L) {
                     val classModel = classRepository.getClassById(classId)
-                    _state.update { it.copy(selectedClass = classModel, isLoading = true) }
+                    _state.update { it.copy(selectedClass = classModel) }
                     
                     studentRepository.getStudentsByClass(classId).map { students ->
-                        coroutineScope {
+                        // Perform heavy calculations and sorting on Default dispatcher
+                        withContext(Dispatchers.Default) {
                             students.map { student ->
                                 async {
                                     val pct = try {
@@ -81,6 +85,7 @@ class StudentsViewModel @Inject constructor(
                                     StudentWithPercentage(student, pct)
                                 }
                             }.awaitAll()
+                            .sortedByDescending { it.student.createdAt }
                         }
                     }
                 } else {
@@ -95,6 +100,7 @@ class StudentsViewModel @Inject constructor(
                     flowOf(emptyList())
                 }
             }
+            .flowOn(Dispatchers.Default) // Ensure the flow processing happens off-main
             .onEach { withPct ->
                 _state.update { it.copy(students = withPct, isLoading = false) }
             }
