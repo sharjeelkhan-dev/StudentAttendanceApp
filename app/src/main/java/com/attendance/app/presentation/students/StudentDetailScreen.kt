@@ -62,7 +62,7 @@ fun SharedTransitionScope.StudentDetailScreen(
                             tint = Color.White
                         )
                     }
-                    
+
                     Column(
 
                     ) {
@@ -92,14 +92,10 @@ fun SharedTransitionScope.StudentDetailScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Shared Element: Avatar
+            // Avatar
             Box(
                 modifier = Modifier
                     .size(120.dp)
-                    .sharedElement(
-                        rememberSharedContentState(key = "avatar-$studentRoll"),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    )
                     .clip(CircleShape)
                     .background(avatarColor),
                 contentAlignment = Alignment.Center
@@ -114,15 +110,11 @@ fun SharedTransitionScope.StudentDetailScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Shared Element: Name
+            // Name
             Text(
                 text = studentName,
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.sharedElement(
-                    rememberSharedContentState(key = "name-$studentRoll"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                )
+                fontWeight = FontWeight.Bold
             )
 
             Text(

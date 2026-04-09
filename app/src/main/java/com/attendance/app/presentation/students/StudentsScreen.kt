@@ -378,14 +378,10 @@ private fun SharedTransitionScope.StudentRow(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Avatar (Shared Element)
+                // Avatar
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .sharedElement(
-                            rememberSharedContentState(key = "avatar-$rollNumber"),
-                            animatedVisibilityScope = animatedVisibilityScope
-                        )
                         .clip(CircleShape)
                         .background(avatarColor),
                     contentAlignment = Alignment.Center
@@ -405,11 +401,7 @@ private fun SharedTransitionScope.StudentRow(
                         text = name,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.sharedElement(
-                            rememberSharedContentState(key = "name-$rollNumber"),
-                            animatedVisibilityScope = animatedVisibilityScope
-                        )
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Row(verticalAlignment = Alignment.CenterVertically) {

@@ -115,12 +115,49 @@ private fun SettingsContent(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Custom Settings Header
-            StandardHeader(
-                title = "Settings",
-                subtitle = "Manage Your Preferences",
-                onBackClick = onBack
-            )
+            // Custom Header Layout (Separated from StandardHeader)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(PrimaryGreenDark)
+                    .statusBarsPadding()
+                    .height(95.dp)
+            ) {
+                // Back Button - Adjustable separately
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 8.dp, top = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White
+                    )
+                }
+
+                // Text Content - Adjustable separately
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 56.dp, top = 30.dp)
+                ) {
+                    Text(
+                        text = "Settings",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White,
+                        fontSize = 27.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Manage Your Preferences",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 14.sp
+                    )
+                }
+            }
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 LazyColumn(
