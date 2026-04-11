@@ -57,7 +57,6 @@ private fun ReportsContent(
     val listState = rememberLazyListState()
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        // Fixed Header
         StandardHeader(
             title = "Attendance Report",
             subtitle = state.selectedClass?.let {

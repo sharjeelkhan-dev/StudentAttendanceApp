@@ -87,8 +87,6 @@ private fun StudentsContent(
     val listState = rememberLazyListState()
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-
-        // Fixed Header
         StandardHeader(
             title = "Students",
             subtitle = state.selectedClass?.let {

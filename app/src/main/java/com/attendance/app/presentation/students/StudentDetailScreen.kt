@@ -53,7 +53,7 @@ fun SharedTransitionScope.StudentDetailScreen(
                     .fillMaxWidth()
                     .background(PrimaryGreenDark)
                     .statusBarsPadding()
-                    .height(100.dp)
+                    .height(75.dp)
                     .padding(horizontal = 12.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -61,7 +61,7 @@ fun SharedTransitionScope.StudentDetailScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth().padding(end = 5.dp)
                 ) {
-                    IconButton(onClick = onBack, modifier = Modifier.offset(x = (-5).dp, y = 8.dp)) {
+                    IconButton(onClick = onBack, modifier = Modifier.offset(x = (-5).dp, y = 0.dp)) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -69,7 +69,7 @@ fun SharedTransitionScope.StudentDetailScreen(
                         )
                     }
 
-                    Column(modifier = Modifier.padding(top = 32.dp))
+                    Column(modifier = Modifier.padding(top = 14.dp))
                     {
                         Text(
                             text = "Student Details",

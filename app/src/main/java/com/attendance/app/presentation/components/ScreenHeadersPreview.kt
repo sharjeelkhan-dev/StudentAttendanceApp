@@ -45,7 +45,7 @@ fun StandardHeader(
             .fillMaxWidth()
             .background(backgroundColor)
             .statusBarsPadding()
-            .height(95.dp) // Optimized height for high-quality feel
+            .height(75.dp) // Optimized height for high-quality feel
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.Center
     ) {
@@ -81,7 +81,7 @@ fun StandardHeader(
                         )
                         Text(
                             text = dateFormatted,
-                            modifier = Modifier.offset(y = 5.dp),
+                            modifier = Modifier.offset(x = 2.dp, y = (-3).dp),
                             style = MaterialTheme.typography.bodySmall,
                             color = secondaryContentColor,
                             fontSize = 12.sp
@@ -97,7 +97,7 @@ fun StandardHeader(
                             enabled = !isSaving,
                             shape = RoundedCornerShape(100),
                             color = Color.White,
-                            modifier = Modifier.height(28.dp)
+                            modifier = Modifier.height(28.dp).offset(y = 10.dp)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 14.dp),
@@ -136,7 +136,7 @@ fun StandardHeader(
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(
                             onClick = onSettingsClick,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp).offset(y = 10.dp)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.setting_icon),
@@ -154,14 +154,17 @@ fun StandardHeader(
             text = title,
             style = MaterialTheme.typography.headlineLarge,
             color = contentColor,
+            modifier = Modifier.offset(y = (-8).dp),
             fontWeight = FontWeight.Bold,
             fontSize = 27.sp,
             lineHeight = 32.sp
         )
         Text(
             text = subtitle,
+            modifier = Modifier.offset(x = 2.dp,y = (-8).dp),
             style = MaterialTheme.typography.bodyMedium,
             color = secondaryContentColor,
+
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             lineHeight = 18.sp

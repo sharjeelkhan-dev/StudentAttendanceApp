@@ -67,38 +67,41 @@ private fun HomeContent(
     val isDark = LocalIsDarkMode.current
     val listState = rememberLazyListState()
 
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
+    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // Header (Locked at fixed position)
+        StandardHeader(
+            title = "$greeting 👋",
+            subtitle = if (state.selectedClass?.section?.isNotEmpty() == true)
+                "${state.selectedClass.name} — ${state.selectedClass.section}"
+            else state.selectedClass?.name ?: "No Class",
+            showDate = true,
+            showSettings = true,
+            onSettingsClick = onNavigateToSettings
+        )
 
-            // Fixed Header
-            StandardHeader(
-                title = "$greeting 👋",
-                subtitle = if (state.selectedClass?.section?.isNotEmpty() == true)
-                    "${state.selectedClass.name} — ${state.selectedClass.section}"
-                    else state.selectedClass?.name ?: "No Class",
-                showDate = true,
-                showSettings = true,
-                onSettingsClick = onNavigateToSettings
-            )
-
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        bottom = paddingValues.calculateBottomPadding() + 16.dp
+        Box(modifier = Modifier.fillMaxSize().weight(1f)) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    bottom = paddingValues.calculateBottomPadding() + 16.dp
+                )
+            ) {
+                // Stats Row
+                item {
+                    StatsRow(
+                        total = state.totalStudents,
+                        present = state.presentToday,
+                        absent = state.absentToday
                     )
-                ) {
-                    // Stats Row
-                    item {
-                        StatsRow(
-                            total = state.totalStudents,
-                            present = state.presentToday,
-                            absent = state.absentToday
-                        )
-                    }
+                }
+                item {
+                    StatsRow(
+                        total = state.totalStudents,
+                        present = state.presentToday,
+                        absent = state.absentToday
+                    )
+                }
 
                     // Quick Actions
                     item {
@@ -208,7 +211,6 @@ private fun HomeContent(
             }
         }
     }
-}
 
 @Composable
 private fun StatsRow(

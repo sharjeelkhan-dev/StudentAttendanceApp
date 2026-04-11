@@ -70,7 +70,6 @@ private fun AttendanceContent(
             .padding(bottom = paddingValues.calculateBottomPadding())
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Fixed Header with Save Button back inside
         StandardHeader(
             title = "Take Attendance",
             subtitle = "${state.selectedClass?.name ?: "No Class"} · ${state.presentCount} Present · ${state.absentCount} Absent",
@@ -85,7 +84,7 @@ private fun AttendanceContent(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 7.dp, top = 7.dp)
+                contentPadding = PaddingValues(bottom = 7.dp, top = 0.dp)
             ) {
                 // Search bar
                 item {
@@ -122,7 +121,8 @@ private fun AttendanceContent(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
+                            .offset(y = (-5).dp)
+                            .padding(horizontal = 24.dp, vertical = 5.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         // All Present Button

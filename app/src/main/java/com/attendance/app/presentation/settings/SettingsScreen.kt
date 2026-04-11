@@ -109,126 +109,123 @@ private fun SettingsContent(
 ) {
     val listState = rememberLazyListState()
 
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        Column(
-            modifier = Modifier.fillMaxSize()
+    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // Custom Header Layout (Fixed at top)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(PrimaryGreenDark)
+                .statusBarsPadding()
+                .height(75.dp)
         ) {
-            // Custom Header Layout (Separated from StandardHeader)
-            Box(
+            // Back Button
+            IconButton(
+                onClick = onBack,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(PrimaryGreenDark)
-                    .statusBarsPadding()
-                    .height(95.dp)
+                    .align(Alignment.CenterStart)
+                    .padding(start = 8.dp, top = 2.dp)
             ) {
-                // Back Button - Adjustable separately
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 8.dp, top = 16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
-                    )
-                }
-
-                // Text Content - Adjustable separately
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 56.dp, top = 30.dp)
-                ) {
-                    Text(
-                        text = "Settings",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
-                        fontSize = 27.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Manage Your Preferences",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.8f),
-                        fontSize = 14.sp
-                    )
-                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White
+                )
             }
 
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .navigationBarsPadding(),
-                    contentPadding = PaddingValues(bottom = 16.dp)
-                ) {
-                    // Appearance
-                    item {
-                        SettingsSectionHeader("APPEARANCE")
-                        SettingsToggleItem(
-                            iconPainter = painterResource(id = R.drawable.night_icon),
-                            title = "Dark Mode",
-                            subtitle = "Switch to dark theme",
-                            isChecked = state.isDarkMode,
-                            onToggle = onToggleDarkMode
-                        )
-                    }
-
-                    // Notifications
-                    item {
-                        SettingsSectionHeader("NOTIFICATIONS")
-                        SettingsToggleItem(
-                            iconPainter = painterResource(id = R.drawable.alarm_icon),
-                            title = "Attendance Reminders",
-                            subtitle = "Get daily reminders to take attendance",
-                            isChecked = state.isNotificationsEnabled,
-                            onToggle = onToggleNotifications
-                        )
-                    }
-
-                    // Security
-                    item {
-                        SettingsSectionHeader("SECURITY")
-                        SettingsToggleItem(
-                            icon = Icons.Default.Fingerprint,
-                            title = "Biometric Authentication",
-                            subtitle = "Require fingerprint to open app",
-                            isChecked = state.isBiometricEnabled,
-                            onToggle = onToggleBiometric
-                        )
-                    }
-
-                    // Data
-                    item {
-                        SettingsSectionHeader("DATA")
-                        SettingsActionItem(
-                            iconPainter = painterResource(id = R.drawable.cloud_backup_icon),
-                            title = "Create Backup",
-                            subtitle = "Export data as backup file",
-                            onClick = onCreateBackup
-                        )
-                        SettingsActionItem(
-                            iconPainter = painterResource(id = R.drawable.reload_sync_icon),
-                            title = "Restore Data",
-                            subtitle = "Import from backup file",
-                            onClick = onRestoreBackup
-                        )
-                    }
-                }
-
-                VerticalScrollbar(
-                    lazyListState = listState,
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(top = 12.dp)
+            // Text Content
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 65.dp, top = 14.dp)
+            ) {
+                Text(
+                    text = "Settings",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.White,
+                    fontSize = 27.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Manage Your Preferences",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontSize = 14.sp
                 )
             }
         }
+
+        Box(modifier = Modifier.fillMaxWidth().fillMaxSize().weight(1f)) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .navigationBarsPadding(),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                // Appearance
+                item {
+                    SettingsSectionHeader("APPEARANCE")
+                    SettingsToggleItem(
+                        iconPainter = painterResource(id = R.drawable.night_icon),
+                        title = "Dark Mode",
+                        subtitle = "Switch to dark theme",
+                        isChecked = state.isDarkMode,
+                        onToggle = onToggleDarkMode
+                    )
+                }
+
+                // Notifications
+                item {
+                    SettingsSectionHeader("NOTIFICATIONS")
+                    SettingsToggleItem(
+                        iconPainter = painterResource(id = R.drawable.alarm_icon),
+                        title = "Attendance Reminders",
+                        subtitle = "Get daily reminders to take attendance",
+                        isChecked = state.isNotificationsEnabled,
+                        onToggle = onToggleNotifications
+                    )
+                }
+
+                // Security
+                item {
+                    SettingsSectionHeader("SECURITY")
+                    SettingsToggleItem(
+                        icon = Icons.Default.Fingerprint,
+                        title = "Biometric Authentication",
+                        subtitle = "Require fingerprint to open app",
+                        isChecked = state.isBiometricEnabled,
+                        onToggle = onToggleBiometric
+                    )
+                }
+
+                // Data
+                item {
+                    SettingsSectionHeader("DATA")
+                    SettingsActionItem(
+                        iconPainter = painterResource(id = R.drawable.cloud_backup_icon),
+                        title = "Create Backup",
+                        subtitle = "Export data as backup file",
+                        onClick = onCreateBackup
+                    )
+                    SettingsActionItem(
+                        iconPainter = painterResource(id = R.drawable.reload_sync_icon),
+                        title = "Restore Data",
+                        subtitle = "Import from backup file",
+                        onClick = onRestoreBackup
+                    )
+                }
+            }
+
+            VerticalScrollbar(
+                lazyListState = listState,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(top = 12.dp)
+            )
+        }
     }
 }
+
 
 @Composable
 private fun SettingsSectionHeader(title: String) {

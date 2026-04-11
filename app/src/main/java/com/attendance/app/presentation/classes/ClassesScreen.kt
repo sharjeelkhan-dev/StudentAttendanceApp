@@ -59,7 +59,6 @@ private fun ClassesContent(
     
     Box(modifier = modifier.fillMaxSize().background(backgroundColor)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Fixed Header
             StandardHeader(
                 title = "Your Classes",
                 subtitle = "${state.classes.size} classes total"
