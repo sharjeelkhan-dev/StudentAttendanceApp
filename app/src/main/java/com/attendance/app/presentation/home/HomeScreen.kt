@@ -95,14 +95,6 @@ private fun HomeContent(
                         absent = state.absentToday
                     )
                 }
-                item {
-                    StatsRow(
-                        total = state.totalStudents,
-                        present = state.presentToday,
-                        absent = state.absentToday
-                    )
-                }
-
                     // Quick Actions
                     item {
                         QuickActionsSection(
@@ -111,13 +103,12 @@ private fun HomeContent(
                             onStudentsClick = onNavigateToStudents
                         )
                     }
-
                     // Recent Sessions Header
                     item {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 8.dp), // Reduced bottom padding
+                                .padding(start = 25.dp, end = 20.dp, top = 22.dp, bottom = 8.dp), // Reduced bottom padding
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -260,7 +251,7 @@ private fun QuickActionsSection(
                 .copy(alpha = 0.6f),
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp,
-            modifier = Modifier.padding(vertical = 14.dp)
+            modifier = Modifier.padding(vertical = 14.dp, horizontal = 5.dp)
         )
 
         Row(

@@ -108,12 +108,11 @@ private fun ReportsContent(
                         }
                     }
                 } else if (state.studentReports.isNotEmpty()) {
-                    val sortedReports = state.studentReports.sortedByDescending { it.attendancePercentage }
+                    val sortedReports = state.studentReports.sortedBy { it.student.id }
                     
-                    itemsIndexed(sortedReports) { index, report ->
+                    itemsIndexed(sortedReports) { _, report ->
                         StudentReportCard(
                             report = report,
-                            rank = index + 1,
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
                         )
                     }
@@ -195,7 +194,6 @@ private fun ReportsContent(
 @Composable
 private fun StudentReportCard(
     report: StudentReport,
-    rank: Int,
     modifier: Modifier = Modifier
 ) {
     val percentage = report.attendancePercentage
@@ -204,25 +202,6 @@ private fun StudentReportCard(
         percentage >= 80 -> PresentGreen
         percentage >= 60 -> LateOrange
         else -> AbsentRed
-    }
-    
-    val statusBg = when {
-        percentage >= 80 -> PresentGreenBg
-        percentage >= 60 -> LateOrangeBg
-        else -> AbsentRedBg
-    }
-    
-    val statusText = when {
-        percentage >= 80 -> "Excellent"
-        percentage >= 60 -> "Average"
-        else -> "At Risk"
-    }
-
-    val rankSuffix = when (rank) {
-        1 -> "st"
-        2 -> "nd"
-        3 -> "rd"
-        else -> "th"
     }
 
     Card(
@@ -273,26 +252,12 @@ private fun StudentReportCard(
                                 text = report.student.fullName,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.ExtraBold,
-                                modifier = Modifier.offset(y = 10.dp),
+                                modifier = Modifier.offset(y = 7.dp),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 fontSize = 14.sp
                             )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Surface(
-                                color = statusBg,
-                                modifier = Modifier.offset(y = 10.dp),
-                                shape = RoundedCornerShape(5.dp)
-                            ) {
-                                Text(
-                                    text = statusText,
-                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = statusColor,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 8.sp
-                                )
-                            }
+
                         }
 
                         Spacer(modifier = Modifier.height(4.dp))
@@ -300,7 +265,7 @@ private fun StudentReportCard(
                         Text(
                             text = "${report.student.rollNumber}  •  ${report.presentCount}/${report.totalSessions} classes",
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.offset(y = 5.dp),
+                            modifier = Modifier.offset(y = 3.dp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                             fontWeight = FontWeight.Medium,
                             fontSize = 10.sp
@@ -317,7 +282,7 @@ private fun StudentReportCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     LinearProgressIndicator(
@@ -330,36 +295,15 @@ private fun StudentReportCard(
                         trackColor = statusColor.copy(alpha = 0.08f),
                         strokeCap = StrokeCap.Round
                     )
-                    
-                    Spacer(modifier = Modifier.width(12.dp))
-                    
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        modifier = Modifier.width(28.dp).offset(x = (-12).dp),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        Text(
-                            text = "$rank",
-                            modifier = Modifier.offset(y = (-2).dp,),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 13.sp
-                        )
-                        Text(
-                            text = rankSuffix,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 9.sp,
-                            modifier = Modifier.offset(y = (-6.5).dp)
-                        )
-                    }
+
+                    Spacer(modifier = Modifier.width(15.dp))
+
                 }
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -434,7 +378,7 @@ private fun SessionDetailCard(
                             .clip(CircleShape)
                             .background(
                                 if (isPresent) getAvatarColor(name)
-                                else if (isDarkGlobal) Color(0xFF2C2C2C) else Color(0xFFF2F4F7)
+                                else if (isDarkGlobal) Color(0xFF424242) else Color(0xFFF2F4F7)
                             ),
                         contentAlignment = Alignment.Center
                     ) {

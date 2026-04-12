@@ -3,7 +3,7 @@ package com.attendance.app.presentation.theme
 import androidx.compose.ui.graphics.Color
 
 // Primary Green Palette (matching the dark green header in screenshots)
-val PrimaryGreen = Color(0xFF2E7D52)
+val PrimaryGreen = Color(0xFF1B5E3B)
 val PrimaryGreenDark = Color(0xFF1B5E3B)
 val PrimaryGreenLight = Color(0xFF4CAF7D)
 val PrimaryGreenSurface = Color(0xFFE8F5E9)

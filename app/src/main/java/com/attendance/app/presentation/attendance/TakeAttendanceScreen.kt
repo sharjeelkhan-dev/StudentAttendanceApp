@@ -63,7 +63,7 @@ private fun AttendanceContent(
 
     val isDark = LocalIsDarkMode.current
     val listState = rememberLazyListState()
-    
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -84,36 +84,67 @@ private fun AttendanceContent(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 7.dp, top = 0.dp)
+                contentPadding = PaddingValues(bottom = 7.dp, top = 5.dp)
             ) {
-                // Search bar
+                // Beautiful Integrated Search Bar (Now inside scrollable list)
                 item {
-                    OutlinedTextField(
-                        value = state.searchQuery,
-                        onValueChange = { onEvent(AttendanceEvent.SearchQueryChanged(it)) },
-                        placeholder = { Text("Search student...", color =
-                            MaterialTheme.colorScheme
-                                .onSurfaceVariant
-                                .copy(alpha = 0.6f)) },
-                        leadingIcon = {
-                            Icon(Icons.Default.Search,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme
-                                    .onSurfaceVariant.copy(alpha = 0.6f))
-                        },
+                    Surface(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp, vertical = 12.dp),
-                        shape = RoundedCornerShape(28.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                            focusedBorderColor = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen,
-                            unfocusedContainerColor = if (isDark) MaterialTheme.colorScheme.surface else Color.White,
-                            focusedContainerColor = if (isDark) MaterialTheme.colorScheme.surface else Color.White,
-                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                        ),
-                        singleLine = true
-                    )
+                        shape = RoundedCornerShape(24.dp),
+                        color = if (isDark) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) else Color(0xFFF2F4F7),
+                        tonalElevation = 2.dp,
+                        border = if (isDark) 
+                            androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)) 
+                        else 
+                            androidx.compose.foundation.BorderStroke(1.dp, Color.Black.copy(alpha = 0.1f))
+                    ) {
+                        TextField(
+                            value = state.searchQuery,
+                            onValueChange = { onEvent(AttendanceEvent.SearchQueryChanged(it)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { 
+                                Text(
+                                    "Search student name or roll number...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                ) 
+                            },
+                            leadingIcon = { 
+                                Icon(
+                                    Icons.Default.Search, 
+                                    contentDescription = null,
+                                    tint = if (isDark) Color.LightGray else Color.LightGray,
+                                    modifier = Modifier.size(20.dp).offset(x = 5.dp)
+                                ) 
+                            },
+                            trailingIcon = {
+                                if (state.searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { onEvent(AttendanceEvent.SearchQueryChanged("")) }) {
+                                        Icon(
+                                            Icons.Default.Close, 
+                                            contentDescription = "Clear",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            },
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                cursorColor = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
+                            ),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                    }
                 }
 
                 // All Present / All Absent buttons
@@ -122,7 +153,7 @@ private fun AttendanceContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .offset(y = (-5).dp)
-                            .padding(horizontal = 24.dp, vertical = 5.dp),
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         // All Present Button
@@ -130,7 +161,8 @@ private fun AttendanceContent(
                             onClick = { onEvent(AttendanceEvent.MarkAllPresent) },
                             modifier = Modifier.weight(1f).height(44.dp),
                             shape = RoundedCornerShape(28.dp),
-                            color = if (isDark) PresentGreen.copy(alpha = 0.12f) else PresentGreen.copy(alpha = 0.06f),
+                            color = if (isDark) PresentGreen.copy(alpha = 0.12f)
+                            else PresentGreen.copy(alpha = 0.06f),
                             border = androidx.compose.foundation.BorderStroke(1.dp, PresentGreen.copy(alpha = 0.25f))
                         ) {
                             Row(
@@ -138,8 +170,8 @@ private fun AttendanceContent(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Icon(
-                                    Icons.Default.DoneAll, 
-                                    contentDescription = null, 
+                                    Icons.Default.DoneAll,
+                                    contentDescription = null,
                                     tint = PresentGreen,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -154,7 +186,7 @@ private fun AttendanceContent(
                                 )
                             }
                         }
-                        
+
                         // All Absent Button
                         Surface(
                             onClick = { onEvent(AttendanceEvent.MarkAllAbsent) },
@@ -168,8 +200,8 @@ private fun AttendanceContent(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Icon(
-                                    Icons.Default.Close, 
-                                    contentDescription = null, 
+                                    Icons.Default.Close,
+                                    contentDescription = null,
                                     tint = AbsentRed,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -197,9 +229,9 @@ private fun AttendanceContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = if (state.searchQuery.isBlank()) 
+                                text = if (state.searchQuery.isBlank())
                                     "No students found in this class.\nAdd students to start taking attendance!"
-                                else 
+                                else
                                     "No students match your search.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
@@ -237,7 +269,7 @@ private fun AttendanceStudentRow(
     onToggle: (AttendanceStatus) -> Unit
 ) {
     val isDark = LocalIsDarkMode.current
-    
+
     CompositionLocalProvider(
         LocalRippleConfiguration provides RippleConfiguration(
             color = Color.Gray.copy(alpha = 0.15f)
@@ -328,6 +360,8 @@ private fun AttendanceStudentRow(
         }
     }
 }
+
+
 
 @Preview(showBackground = true, name = "Light Mode")
 @Composable

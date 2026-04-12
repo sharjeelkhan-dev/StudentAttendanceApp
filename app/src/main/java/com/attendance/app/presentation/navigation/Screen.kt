@@ -8,8 +8,8 @@ sealed class Screen(val route: String) {
     data object Students : Screen("students")
     data object Classes : Screen("classes")
     data object Settings : Screen("settings")
-    data object StudentDetail : Screen("student_detail/{name}/{roll}/{initials}/{color}") {
-        fun createRoute(name: String, roll: String, initials: String, color: Int) = 
-            "student_detail/$name/$roll/$initials/$color"
+    data object StudentDetail : Screen("student_detail/{studentId}/{classId}/{name}/{roll}/{initials}/{color}") {
+        fun createRoute(studentId: Long, classId: Long, name: String, roll: String, initials: String, color: Int) = 
+            "student_detail/$studentId/$classId/$name/$roll/$initials/$color"
     }
 }

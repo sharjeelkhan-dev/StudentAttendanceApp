@@ -80,23 +80,44 @@ class HomeViewModel @Inject constructor(
                                 attendanceRepository.getSessionSummary(selectedClass.id, date),
                                 attendanceRepository.getAttendanceByClassAndDate(selectedClass.id, date)
                             ) { summary, records ->
-                                val studentStatuses = students.map { student ->
+                                val sessionDate = try {
+                                    LocalDate.parse(summary.date)
+                                } catch (e: Exception) { LocalDate.MAX }
+
+                                val enrolledStudents = students.filter { student ->
+                                    val studentCreatedDate = try {
+                                        java.time.Instant.ofEpochMilli(student.createdAt)
+                                            .atZone(java.time.ZoneId.systemDefault())
+                                            .toLocalDate()
+                                    } catch (e: Exception) { LocalDate.MIN }
+                                    !sessionDate.isBefore(studentCreatedDate)
+                                }
+
+                                val studentStatuses = enrolledStudents.map { student ->
                                     val record = records.find { it.studentId == student.id }
                                     val isPresent = record?.status != null && record.status != com.attendance.app.domain.model.AttendanceStatus.ABSENT
                                     student.fullName to isPresent
                                 }
-                                SessionWithStudents(summary, studentStatuses)
+
+                                val presentOnDay = studentStatuses.count { it.second }
+                                val updatedSummary = summary.copy(
+                                    totalStudents = enrolledStudents.size,
+                                    presentCount = presentOnDay,
+                                    absentCount = enrolledStudents.size - presentOnDay
+                                )
+                                SessionWithStudents(updatedSummary, studentStatuses)
                             }
                         }
 
                         combine(sessionFlows) { it.toList() }.map { sessions ->
                             val today = LocalDate.now().toString()
                             val todaySession = sessions.find { it.summary.date == today }
+                            val currentStudentsCount = students.size
                             
                             HomeState(
                                 classes = classes,
                                 selectedClass = selectedClass,
-                                totalStudents = students.size,
+                                totalStudents = currentStudentsCount,
                                 presentToday = todaySession?.summary?.presentCount ?: 0,
                                 absentToday = todaySession?.summary?.absentCount ?: 0,
                                 recentSessions = sessions.sortedByDescending { it.summary.date },

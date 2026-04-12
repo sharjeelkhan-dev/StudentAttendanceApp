@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,8 +30,10 @@ fun StandardHeader(
     subtitle: String,
     onBackClick: (() -> Unit)? = null,
     showSettings: Boolean = false,
+    showSearch: Boolean = false,
     showDate: Boolean = false,
     onSettingsClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
     showSave: Boolean = false,
     onSaveClick: () -> Unit = {},
     isSaving: Boolean = false,
@@ -132,6 +135,21 @@ fun StandardHeader(
                         }
                     }
 
+                    if (showSearch) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(
+                            onClick = onSearchClick,
+                            modifier = Modifier.size(24.dp).offset(y = 10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = contentColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
                     if (showSettings) {
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(
@@ -161,16 +179,16 @@ fun StandardHeader(
         )
         Text(
             text = subtitle,
-            modifier = Modifier.offset(x = 2.dp,y = (-8).dp),
+            modifier = Modifier.offset(x = 2.dp, y = (-8).dp),
             style = MaterialTheme.typography.bodyMedium,
             color = secondaryContentColor,
-
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             lineHeight = 18.sp
         )
     }
 }
+
 
 @Preview(name = "Take Attendance Header")
 @Composable

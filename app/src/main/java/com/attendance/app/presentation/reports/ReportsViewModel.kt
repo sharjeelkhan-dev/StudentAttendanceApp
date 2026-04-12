@@ -87,15 +87,19 @@ class ReportsViewModel @Inject constructor(
                                         }
                                     }
                                     
-                                    combine(sessionFlows) { it.toList() }.map { sessions ->
+                                    combine(sessionFlows) { sessions ->
+                                        val sessionList = sessions.toList()
                                         val reports = students.map { student ->
-                                            // Only count sessions that happened AFTER the student was created
-                                            val relevantSessions = sessions.filter { session ->
+                                            val studentCreatedDate = try {
+                                                Instant.ofEpochMilli(student.createdAt)
+                                                    .atZone(ZoneId.systemDefault())
+                                                    .toLocalDate()
+                                            } catch (e: Exception) { LocalDate.MIN }
+
+                                            // Only count sessions that happened AFTER or ON the student's creation date
+                                            val relevantSessions = sessionList.filter { session ->
                                                 try {
                                                     val sessionDate = LocalDate.parse(session.summary.date)
-                                                    val studentCreatedDate = Instant.ofEpochMilli(student.createdAt)
-                                                        .atZone(ZoneId.systemDefault())
-                                                        .toLocalDate()
                                                     !sessionDate.isBefore(studentCreatedDate)
                                                 } catch (e: Exception) { true }
                                             }
@@ -112,7 +116,39 @@ class ReportsViewModel @Inject constructor(
                                                 totalSessions = totalSessions
                                             )
                                         }
-                                        reports to sessions
+
+                                        // Filter session details to only show students who were enrolled on that date
+                                        val filteredSessions = sessionList.map { session ->
+                                            val sessionDate = try {
+                                                LocalDate.parse(session.summary.date)
+                                            } catch (e: Exception) { LocalDate.MAX }
+
+                                            val enrolledStudents = students.filter { student ->
+                                                val studentCreatedDate = try {
+                                                    Instant.ofEpochMilli(student.createdAt)
+                                                        .atZone(ZoneId.systemDefault())
+                                                        .toLocalDate()
+                                                } catch (e: Exception) { LocalDate.MIN }
+                                                !sessionDate.isBefore(studentCreatedDate)
+                                            }
+
+                                            // Update summary counts based on enrolled students for that day
+                                            val recordsForEnrolled = session.records.filter { record ->
+                                                enrolledStudents.any { it.id == record.studentId }
+                                            }
+                                            val presentOnDay = recordsForEnrolled.count { it.status == com.attendance.app.domain.model.AttendanceStatus.PRESENT }
+
+                                            session.copy(
+                                                students = enrolledStudents,
+                                                summary = session.summary.copy(
+                                                    totalStudents = enrolledStudents.size,
+                                                    presentCount = presentOnDay,
+                                                    absentCount = enrolledStudents.size - presentOnDay
+                                                )
+                                            )
+                                        }
+
+                                        reports to filteredSessions
                                     }
                                 }
                         }.flatMapLatest { it }

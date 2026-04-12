@@ -16,7 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,8 +28,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.attendance.app.domain.model.AttendanceStatus
 import com.attendance.app.presentation.components.StatsCard
 import com.attendance.app.presentation.theme.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -39,10 +43,18 @@ fun SharedTransitionScope.StudentDetailScreen(
     initials: String,
     avatarColor: Color,
     animatedVisibilityScope: AnimatedContentScope,
+    viewModel: StudentDetailViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
+    val state by viewModel.state.collectAsState()
     val isDark = LocalIsDarkMode.current
     
+    val currentStudentName = state.student?.fullName ?: studentName
+    val currentStudentRoll = state.student?.rollNumber ?: studentRoll
+    val currentInitials = state.student?.initials ?: initials
+    
+    var selectedFilter by remember { mutableStateOf("All") }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -82,7 +94,7 @@ fun SharedTransitionScope.StudentDetailScreen(
 
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = studentRoll,
+                                text = currentStudentRoll,
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Color.White.copy(alpha = 0.9f),
                                 fontWeight = FontWeight.Medium,
@@ -118,7 +130,7 @@ fun SharedTransitionScope.StudentDetailScreen(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
-                            text = initials,
+                            text = currentInitials,
                             color = Color.White,
                             fontSize = 68.sp,
                             fontWeight = FontWeight.Bold
@@ -146,7 +158,7 @@ fun SharedTransitionScope.StudentDetailScreen(
 
             // Name
             Text(
-                text = studentName,
+                text = currentStudentName,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -172,7 +184,7 @@ fun SharedTransitionScope.StudentDetailScreen(
                     
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = studentRoll,
+                        text = currentStudentRoll,
                         style = MaterialTheme.typography.bodyLarge,
                         color = if (isDark) Color.White else Color(0xFF1A1A1A),
                         fontWeight = FontWeight.Bold
@@ -192,25 +204,38 @@ fun SharedTransitionScope.StudentDetailScreen(
             ) {
                 StatsCard(
                     label = "Present",
-                    value = "18",
+                    value = String.format(Locale.getDefault(), "%02d", state.presentCount),
                     valueColor = PresentGreen,
                     modifier = Modifier.weight(1f)
                 )
                 StatsCard(
                     label = "Absent",
-                    value = "02",
+                    value = String.format(Locale.getDefault(), "%02d", state.absentCount),
                     valueColor = AbsentRed,
                     modifier = Modifier.weight(1f)
                 )
                 StatsCard(
                     label = "Attendance",
-                    value = "90%",
+                    value = String.format(Locale.getDefault(), "%.0f%%", state.attendancePercentage),
                     valueColor = Color(0xFF00ACC1),
                     modifier = Modifier.weight(1f)
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+
+            // Section Header: Logs (Now outside the card)
+            Text(
+                text = "Logs",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = (-30).dp)
+                    .padding(horizontal = 30.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 20.sp
+            )
 
             // Attendance Log Card (Refined to match reference image)
             Card(
@@ -227,38 +252,75 @@ fun SharedTransitionScope.StudentDetailScreen(
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        LogTab(
+                            text = "All",
+                            isSelected = selectedFilter == "All",
+                            modifier = Modifier.weight(1f),
+                            onClick = { selectedFilter = "All" }
+                        )
+                        LogTab(
+                            text = "Present",
+                            isSelected = selectedFilter == "Present",
+                            modifier = Modifier.weight(1f),
+                            onClick = { selectedFilter = "Present" }
+                        )
+                        LogTab(
+                            text = "Absent",
+                            isSelected = selectedFilter == "Absent",
+                            modifier = Modifier.weight(1f),
+                            onClick = { selectedFilter = "Absent" }
+                        )
+                    }
 
-                        Column {
-                            Text(
-                                text = "Logs",
-                                modifier = Modifier.offset(x = 5.dp, y = 5.dp),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 20.sp,
-                                lineHeight = 22.sp
-                            )
-                        }
+                    Spacer(modifier = Modifier.height(28.dp))
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            LogTab("All", isSelected = true)
-                            LogTab("Present", isSelected = false)
-                            LogTab("Absent", isSelected = false)
+                    val filteredLogs = remember(state.attendanceLogs, selectedFilter) {
+                        when (selectedFilter) {
+                            "Present" -> state.attendanceLogs.filter { it.status == AttendanceStatus.PRESENT }
+                            "Absent" -> state.attendanceLogs.filter { it.status == AttendanceStatus.ABSENT }
+                            else -> state.attendanceLogs
                         }
                     }
-                    
-                    Spacer(modifier = Modifier.height(28.dp))
-                    
-                    AttendanceLogItem("Thu", "03", "Apr 03", "Lecture 20 . Data Structures", true)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
-                    AttendanceLogItem("Wed", "02", "Apr 02", "Lecture 19 . Data Structures", true)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
-                    AttendanceLogItem("Tue", "01", "Apr 01", "Lecture 18 . Data Structures", false)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
-                    AttendanceLogItem("Mon", "31", "Mar 31", "Lecture 17 . Data Structures", true)
+
+                    if (filteredLogs.isEmpty()) {
+                        Text(
+                            text = "No logs available",
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    }
+
+                    filteredLogs.forEachIndexed { index, record ->
+                        val date = remember(record.date) {
+                            try {
+                                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(record.date)
+                            } catch (_: Exception) {
+                                null
+                            }
+                        }
+                        val dayStr = date?.let { SimpleDateFormat("EEE", Locale.getDefault()).format(it) } ?: "---"
+                        val dayNum = date?.let { SimpleDateFormat("dd", Locale.getDefault()).format(it) } ?: "--"
+                        val monthStr = date?.let { SimpleDateFormat("MMM dd", Locale.getDefault()).format(it) } ?: record.date
+
+                        AttendanceLogItem(
+                            day = dayStr,
+                            date = dayNum,
+                            monthDate = monthStr,
+                            lectureInfo = "Attendance marked",
+                            isPresent = record.status == AttendanceStatus.PRESENT
+                        )
+                        if (index < filteredLogs.size - 1) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 4.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                            )
+                        }
+                    }
                 }
             }
             
@@ -268,6 +330,7 @@ fun SharedTransitionScope.StudentDetailScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .offset(y = (-30).dp)
                     .padding(horizontal = 20.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = CardDefaults.cardColors(
@@ -276,16 +339,21 @@ fun SharedTransitionScope.StudentDetailScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
+                    val enrollmentDate = remember(state.student?.createdAt) {
+                        state.student?.createdAt?.let {
+                            SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date(it))
+                        } ?: "N/A"
+                    }
                     DetailRow(
                         icon = Icons.Rounded.CalendarMonth,
                         label = "Enrollment Date",
-                        value = "January 15, 2024"
+                        value = enrollmentDate
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     DetailRow(
                         icon = Icons.Rounded.School,
                         label = "Assigned Class",
-                        value = "Software Engineering (6C1)"
+                        value = state.classModel?.let { "${it.name} (${it.section})" } ?: "N/A"
                     )
                 }
             }
@@ -296,19 +364,27 @@ fun SharedTransitionScope.StudentDetailScreen(
 }
 
 @Composable
-private fun LogTab(text: String, isSelected: Boolean) {
+private fun LogTab(
+    text: String,
+    isSelected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     Surface(
-        color = if (isSelected) PrimaryGreen else Color.LightGray,
+        onClick = onClick,
+        color = if (isSelected) PrimaryGreen else Color.LightGray.copy(alpha = 0.3f),
         shape = RoundedCornerShape(28.dp),
+        modifier = modifier,
         border = if (isSelected) null else BorderStroke(1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
     ) {
         Text(
             text = text,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            modifier = Modifier.padding(vertical = 10.dp),
             style = MaterialTheme.typography.labelLarge,
-            color = if (isSelected) Color.White else Color.Black,
-            fontWeight = FontWeight.Bold
+            color = if (isSelected) Color.White else if (LocalIsDarkMode.current) Color.White else Color.Black,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -321,7 +397,8 @@ private fun AttendanceLogItem(
     lectureInfo: String,
     isPresent: Boolean
 ) {
-    val statusColor = if (isPresent) PrimaryGreen else AbsentRed
+    val statusColor = if (isPresent) PresentGreen else AbsentRed
+    val statusBgColor = if (isPresent) PresentGreenBg else AbsentRedBg
     
     Row(
         modifier = Modifier
@@ -376,15 +453,15 @@ private fun AttendanceLogItem(
         
         // Status Pill
         Surface(
-            color = statusColor,
-            modifier = Modifier.offset(y = (-11).dp),
+            color = statusBgColor,
+            modifier = Modifier.offset(y = (-5).dp),
             shape = RoundedCornerShape(10.dp)
         ) {
             Text(
                 text = if (isPresent) "Present" else "Absent",
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                 style = MaterialTheme.typography.labelSmall,
-                color = Color.White,
+                color = statusColor,
                 fontWeight = FontWeight.Bold,
                 fontSize = 11.sp
             )
@@ -436,18 +513,60 @@ fun StudentDetailPreview() {
     AttendanceTheme {
         SharedTransitionLayout {
             AnimatedContent(targetState = true, label = "student_detail_preview") {
-                StudentDetailScreen(
-                    studentName = "John Doe",
-                    studentRoll = "CS-01",
-                    initials = "JD",
-                    avatarColor = PrimaryGreen,
-                    animatedVisibilityScope = this,
-                    onBack = {}
-                )
+                val animatedVisibilityScope = this
+                val viewModel = remember { StudentDetailViewModelPreview() }
+                Box(modifier = Modifier.fillMaxSize()) {
+                    StudentDetailScreen(
+                        studentName = "John Doe",
+                        studentRoll = "CS-01",
+                        initials = "JD",
+                        avatarColor = PrimaryGreen,
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        viewModel = viewModel,
+                        onBack = {}
+                    )
+                }
             }
         }
     }
 }
+
+@SuppressLint("VisibleForTests")
+class StudentDetailViewModelPreview : StudentDetailViewModel(
+    studentRepository = object : com.attendance.app.domain.repository.StudentRepository {
+        override fun getStudentsByClass(classId: Long) = error("Not implemented")
+        override suspend fun getStudentById(studentId: Long) = com.attendance.app.domain.model.Student(1L, "John Doe", "CS-01", 1L)
+        override suspend fun insertStudent(student: com.attendance.app.domain.model.Student) = 0L
+        override suspend fun updateStudent(student: com.attendance.app.domain.model.Student) {}
+        override suspend fun deleteStudent(student: com.attendance.app.domain.model.Student) {}
+        override suspend fun getAttendancePercentage(studentId: Long, classId: Long) = 90.0
+        override fun searchStudents(classId: Long, query: String) = error("Not implemented")
+    },
+    classRepository = object : com.attendance.app.domain.repository.ClassRepository {
+        override fun getAllClasses() = error("Not implemented")
+        override suspend fun getClassById(classId: Long) = com.attendance.app.domain.model.ClassModel(1L, "Software Engineering", "6C1")
+        override suspend fun insertClass(classModel: com.attendance.app.domain.model.ClassModel) = 0L
+        override suspend fun updateClass(classModel: com.attendance.app.domain.model.ClassModel) {}
+        override suspend fun deleteClass(classModel: com.attendance.app.domain.model.ClassModel) {}
+    },
+    attendanceRepository = object : com.attendance.app.domain.repository.AttendanceRepository {
+        override fun getAttendanceByClassAndDate(classId: Long, date: String) = error("Not implemented")
+        override fun getAttendanceByStudent(studentId: Long, classId: Long) = kotlinx.coroutines.flow.flowOf(
+            listOf(
+                com.attendance.app.domain.model.AttendanceRecord(1, 1, 1, "2024-04-03", AttendanceStatus.PRESENT),
+                com.attendance.app.domain.model.AttendanceRecord(2, 1, 1, "2024-04-02", AttendanceStatus.PRESENT),
+                com.attendance.app.domain.model.AttendanceRecord(3, 1, 1, "2024-04-01", AttendanceStatus.ABSENT)
+            )
+        )
+        override suspend fun saveAttendance(records: List<com.attendance.app.domain.model.AttendanceRecord>) {}
+        override fun getSessionSummary(classId: Long, date: String) = error("Not implemented")
+        override fun getRecentSessions(classId: Long, limit: Int) = error("Not implemented")
+        override fun getSessionDates(classId: Long) = error("Not implemented")
+        override suspend fun getAllAttendanceForClass(classId: Long) = emptyList<com.attendance.app.domain.model.AttendanceRecord>()
+        override suspend fun getAllAttendance() = emptyList<com.attendance.app.domain.model.AttendanceRecord>()
+    },
+    savedStateHandle = androidx.lifecycle.SavedStateHandle(mapOf("studentId" to 1L, "classId" to 1L))
+)
 
 @Preview(showBackground = true)
 @Composable
@@ -465,12 +584,32 @@ fun AttendanceLogItemPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun DetailRowPreview() {
+fun InfoSectionPreview() {
     AttendanceTheme {
-        DetailRow(
-            icon = Icons.Rounded.CalendarMonth,
-            label = "Enrollment Date",
-            value = "January 15, 2024"
-        )
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(y = (-30).dp)
+                .padding(20.dp),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                DetailRow(
+                    icon = Icons.Rounded.CalendarMonth,
+                    label = "Enrollment Date",
+                    value = "April 03, 2024"
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                DetailRow(
+                    icon = Icons.Rounded.School,
+                    label = "Assigned Class",
+                    value = "Software Engineering (6C1)"
+                )
+            }
+        }
     }
 }

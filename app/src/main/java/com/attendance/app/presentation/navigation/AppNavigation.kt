@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.ui.graphics.toArgb
 import com.attendance.app.presentation.attendance.TakeAttendanceScreen
 import com.attendance.app.presentation.classes.ClassesScreen
 import com.attendance.app.presentation.components.BottomNavBar
@@ -184,10 +185,12 @@ fun AppNavigation() {
                         onStudentClick = { student, color ->
                             navController.navigate(
                                 Screen.StudentDetail.createRoute(
+                                    studentId = student.id,
+                                    classId = student.classId,
                                     name = student.fullName,
                                     roll = student.rollNumber,
                                     initials = student.initials,
-                                    color = color.value.toLong().toInt()
+                                    color = color.toArgb()
                                 )
                             )
                         },
@@ -198,6 +201,8 @@ fun AppNavigation() {
                 composable(
                     route = Screen.StudentDetail.route,
                     arguments = listOf(
+                        navArgument("studentId") { type = NavType.LongType },
+                        navArgument("classId") { type = NavType.LongType },
                         navArgument("name") { type = NavType.StringType },
                         navArgument("roll") { type = NavType.StringType },
                         navArgument("initials") { type = NavType.StringType },
@@ -213,7 +218,7 @@ fun AppNavigation() {
                         studentName = name,
                         studentRoll = roll,
                         initials = initials,
-                        avatarColor = Color(colorValue.toLong().toULong()),
+                        avatarColor = Color(colorValue),
                         animatedVisibilityScope = this@composable,
                         onBack = { navController.popBackStack() }
                     )

@@ -1,5 +1,7 @@
 package com.attendance.app.presentation.components
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -22,6 +24,7 @@ fun StatsCard(
     valueColor: Color = Color.Unspecified
 ) {
     val displayValueColor = if (valueColor == Color.Unspecified) MaterialTheme.colorScheme.onSurfaceVariant else valueColor
+    val isDark = isSystemInDarkTheme()
 
     Card(
         modifier = modifier,
@@ -29,6 +32,7 @@ fun StatsCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
+        border = if (isDark) BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)) else null,
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(
