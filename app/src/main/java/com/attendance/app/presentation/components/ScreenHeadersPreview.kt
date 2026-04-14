@@ -169,7 +169,7 @@ fun StandardHeader(
             color = contentColor,
             modifier = Modifier.offset(y = (-3).dp),
             fontWeight = FontWeight.Bold,
-            fontSize = 27.sp,
+            fontSize = 25.sp,
             lineHeight = 30.sp,
             maxLines = 1,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis

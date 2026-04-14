@@ -5,7 +5,6 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
@@ -21,7 +20,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
@@ -53,8 +51,6 @@ fun SharedTransitionScope.StudentDetailScreen(
     onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
-    val isDark = LocalIsDarkMode.current
-    
     val currentStudentName = state.student?.fullName ?: studentName
     val currentStudentRoll = state.student?.rollNumber ?: studentRoll
     val currentInitials = state.student?.initials ?: initials
@@ -188,60 +184,7 @@ fun SharedTransitionScope.StudentDetailScreen(
                     label = "Attendance",
                     value = String.format(Locale.getDefault(), "%.0f%%", state.attendancePercentage),
                     valueColor = Color(0xFF00ACC1),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Section Header: Attendance Statistics
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 25.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Statistics",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 18.sp
-                )
-                
-                Row(verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.offset(x = (-2).dp)) {
-                    Box(modifier = Modifier.size(8.dp).background(AbsentRed, CircleShape))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("You", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Box(modifier = Modifier.size(8.dp).background(Color(0xFF4285F4), CircleShape))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Avg", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Attendance Graph Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    AttendanceBarChart(
-                        studentData = listOf(85f, 70f, 90f, 95f),
-                        classAvgData = listOf(75f, 75f, 80f, 85f),
-                        labels = listOf("Week 1", "Week 2", "Week 3", "Week 4"),
-                        modifier = Modifier.fillMaxWidth().height(220.dp)
-                    )
+                    modifier = Modifier.weight(1f))
                 }
             }
             
@@ -281,209 +224,7 @@ fun SharedTransitionScope.StudentDetailScreen(
             Spacer(modifier = Modifier.height(40.dp))
         }
     }
-}
 
-@Composable
-fun AttendanceBarChart(
-    studentData: List<Float>,
-    classAvgData: List<Float>,
-    labels: List<String>,
-    modifier: Modifier = Modifier
-) {
-    val maxVal = 100f
-    val gridLines = 5
-    val density = LocalDensity.current
-    val labelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f).toArgb()
-    
-    val textPaint = remember(labelColor) {
-        android.graphics.Paint().apply {
-            color = labelColor
-            textSize = with(density) { 11.sp.toPx() }
-            textAlign = android.graphics.Paint.Align.RIGHT
-            isAntiAlias = true
-        }
-    }
-    val labelPaint = remember(labelColor) {
-        android.graphics.Paint().apply {
-            color = labelColor
-            textSize = with(density) { 11.sp.toPx() }
-            textAlign = android.graphics.Paint.Align.CENTER
-            isAntiAlias = true
-        }
-    }
-
-    Canvas(modifier = modifier.padding(start = 35.dp, end = 10.dp, bottom = 25.dp, top = 10.dp)) {
-        val width = size.width
-        val height = size.height
-        val barWidth = 10.dp.toPx()
-        val groupSpacing = width / labels.size
-        
-        // Draw horizontal grid lines and Y-axis labels
-        for (i in 0..gridLines) {
-            val y = height - (i * height / gridLines)
-            val value = (i * maxVal / gridLines).toInt()
-            val label = when {
-                value >= 90 -> "A"
-                value >= 75 -> "B"
-                value >= 60 -> "C"
-                value >= 45 -> "D"
-                else -> "F"
-            }
-            
-            drawContext.canvas.nativeCanvas.drawText(
-                label,
-                -12.dp.toPx(),
-                y + 4.dp.toPx(),
-                textPaint
-            )
-            
-            drawLine(
-                color = Color.Gray.copy(alpha = 0.15f),
-                start = Offset(0f, y),
-                end = Offset(width, y),
-                strokeWidth = 1.dp.toPx(),
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
-            )
-        }
-
-        // Draw Bars
-        labels.forEachIndexed { index, label ->
-            val xCenter = index * groupSpacing + groupSpacing / 2
-            
-            // Student Bar (Red)
-            val studentBarHeight = (studentData[index] / maxVal) * height
-            drawRoundRect(
-                color = AbsentRed,
-                topLeft = Offset(xCenter - barWidth - 3.dp.toPx(), height - studentBarHeight),
-                size = androidx.compose.ui.geometry.Size(barWidth, studentBarHeight),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(6.dp.toPx())
-            )
-
-            // Class Avg Bar (Blue)
-            val avgBarHeight = (classAvgData[index] / maxVal) * height
-            drawRoundRect(
-                color = Color(0xFF4285F4),
-                topLeft = Offset(xCenter + 3.dp.toPx(), height - avgBarHeight),
-                size = androidx.compose.ui.geometry.Size(barWidth, avgBarHeight),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(6.dp.toPx())
-            )
-
-            // X-Axis Labels
-            drawContext.canvas.nativeCanvas.drawText(
-                label,
-                xCenter,
-                height + 22.dp.toPx(),
-                labelPaint
-            )
-        }
-    }
-}
-
-@Composable
-private fun LogTab(
-    text: String,
-    isSelected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        color = if (isSelected) PrimaryGreen else Color.LightGray.copy(alpha = 0.3f),
-        shape = RoundedCornerShape(28.dp),
-        modifier = modifier,
-        border = if (isSelected) null else BorderStroke(1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(vertical = 10.dp),
-            style = MaterialTheme.typography.labelLarge,
-            color = if (isSelected) Color.White else if (LocalIsDarkMode.current) Color.White else Color.Black,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-private fun AttendanceLogItem(
-    day: String,
-    date: String,
-    monthDate: String,
-    lectureInfo: String,
-    isPresent: Boolean
-) {
-    val statusColor = if (isPresent) PresentGreen else AbsentRed
-    val statusBgColor = if (isPresent) PresentGreenBg else AbsentRedBg
-    
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Date Box
-        Column(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(statusColor),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = day,
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White.copy(alpha = 0.8f),
-                fontWeight = FontWeight.Bold,
-                fontSize = 10.sp
-            )
-            Text(
-                text = date,
-                style = MaterialTheme.typography.titleLarge,
-                color = Color.White,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 20.sp
-            )
-        }
-        
-        Spacer(modifier = Modifier.width(18.dp))
-        
-        // Info
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = monthDate,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 18.sp
-            )
-            Text(
-                text = lectureInfo,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                fontWeight = FontWeight.Medium,
-                fontSize = 13.sp
-            )
-        }
-        
-        // Status Pill
-        Surface(
-            color = statusBgColor,
-            modifier = Modifier.offset(y = (-5).dp),
-            shape = RoundedCornerShape(10.dp)
-        ) {
-            Text(
-                text = if (isPresent) "Present" else "Absent",
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = statusColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 11.sp
-            )
-        }
-    }
-}
 
 @Composable
 private fun DetailRow(icon: ImageVector, label: String, value: String) {
@@ -586,26 +327,11 @@ class StudentDetailViewModelPreview : StudentDetailViewModel(
 
 @Preview(showBackground = true)
 @Composable
-fun AttendanceLogItemPreview() {
-    AttendanceTheme {
-        AttendanceLogItem(
-            day = "Thu",
-            date = "03",
-            monthDate = "Apr 03",
-            lectureInfo = "Lecture 20 . Data Structures",
-            isPresent = true
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
 fun InfoSectionPreview() {
     AttendanceTheme {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(y = (-30).dp)
                 .padding(20.dp),
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(

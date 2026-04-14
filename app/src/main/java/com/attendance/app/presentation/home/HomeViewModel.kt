@@ -90,20 +90,20 @@ class HomeViewModel @Inject constructor(
                             ) { summary, records ->
                                 val sessionDate = try {
                                     LocalDate.parse(summary.date)
-                                } catch (e: Exception) { LocalDate.MAX }
+                                } catch (_: Exception) { LocalDate.MAX }
 
                                 val enrolledStudents = students.filter { student ->
                                     val studentCreatedDate = try {
                                         java.time.Instant.ofEpochMilli(student.createdAt)
                                             .atZone(java.time.ZoneId.systemDefault())
                                             .toLocalDate()
-                                    } catch (e: Exception) { LocalDate.MIN }
+                                    } catch (_: Exception) { LocalDate.MIN }
                                     !sessionDate.isBefore(studentCreatedDate)
                                 }
 
                                 val studentStatuses = enrolledStudents.map { student ->
                                     val record = records.find { it.studentId == student.id }
-                                    val isPresent = record?.status != null && record.status != com.attendance.app.domain.model.AttendanceStatus.ABSENT
+                                    val isPresent = record?.status != null && record.status != AttendanceStatus.ABSENT
                                     student.fullName to isPresent
                                 }
 
@@ -146,12 +146,6 @@ class HomeViewModel @Inject constructor(
         .launchIn(viewModelScope)
     }
 
-    fun selectClass(classModel: ClassModel) {
-        viewModelScope.launch {
-            preferencesManager.setSelectedClassId(classModel.id)
-        }
-    }
-
     fun importAttendance(context: Context, uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -167,7 +161,7 @@ class HomeViewModel @Inject constructor(
                 val recordsToSave = mutableListOf<AttendanceRecord>()
                 val classCache = mutableMapOf<String, Long>() // "Name-Section" to ID
                 
-                // Pre-load existing classes into cache
+
                 classRepository.getAllClasses().first().forEach { 
                     classCache["${it.name}-${it.section}".lowercase()] = it.id 
                 }
@@ -217,7 +211,7 @@ class HomeViewModel @Inject constructor(
                         } else {
                             LocalDate.parse(rawDateStr).toString()
                         }
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         LocalDate.now().toString()
                     }
 
