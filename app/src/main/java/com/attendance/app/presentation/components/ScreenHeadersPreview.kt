@@ -84,7 +84,7 @@ fun StandardHeader(
                 } else if (showDate) {
                     val localDate = try {
                         if (date != null) LocalDate.parse(date) else LocalDate.now()
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         LocalDate.now()
                     }
                     val dateFormatted = localDate.format(

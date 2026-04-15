@@ -15,6 +15,8 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 @Singleton
 class PreferencesManager @Inject constructor(
     @ApplicationContext private val context: Context
+
+
 ) {
     private val dataStore = context.dataStore
 
@@ -24,8 +26,6 @@ class PreferencesManager @Inject constructor(
         val NOTIFICATIONS_ENABLED_KEY = booleanPreferencesKey("notifications_enabled")
         val BIOMETRIC_ENABLED_KEY = booleanPreferencesKey("biometric_enabled")
         val ATTENDANCE_DATE_KEY = stringPreferencesKey("attendance_date")
-        val REMINDER_HOUR_KEY = intPreferencesKey("reminder_hour")
-        val REMINDER_MINUTE_KEY = intPreferencesKey("reminder_minute")
     }
 
     val darkModeFlow: Flow<Boolean> = dataStore.data.map { prefs ->

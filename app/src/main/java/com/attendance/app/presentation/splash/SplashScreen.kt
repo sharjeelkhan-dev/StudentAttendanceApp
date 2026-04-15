@@ -41,7 +41,6 @@ fun SplashScreen(
     )
 
     LaunchedEffect(Unit) {
-        startAnimation = true
         delay(1500)
         onSplashComplete()
     }
