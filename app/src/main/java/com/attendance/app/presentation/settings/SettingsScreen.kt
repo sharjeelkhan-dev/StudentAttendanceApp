@@ -91,11 +91,15 @@ fun SettingsScreen(
             onToggleBiometric = viewModel::toggleBiometric,
             onCreateBackup = viewModel::createBackup,
             onRestoreBackup = viewModel::restoreBackup,
-            modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
+            onSetAttendanceDate = viewModel::setAttendanceDate,
+            modifier = Modifier
+                .padding(bottom = paddingValues
+                    .calculateBottomPadding())
         )
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsContent(
     state: SettingsState,
@@ -105,6 +109,7 @@ private fun SettingsContent(
     onToggleBiometric: (Boolean) -> Unit,
     onCreateBackup: () -> Unit,
     onRestoreBackup: () -> Unit,
+    onSetAttendanceDate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -116,14 +121,14 @@ private fun SettingsContent(
                 .fillMaxWidth()
                 .background(PrimaryGreenDark)
                 .statusBarsPadding()
-                .height(75.dp)
+                .height(70.dp)
         ) {
             // Back Button
             IconButton(
                 onClick = onBack,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 8.dp, top = 2.dp)
+                    .padding(start = 8.dp)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -136,7 +141,7 @@ private fun SettingsContent(
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 65.dp, top = 14.dp)
+                    .padding(start = 65.dp, top = 12.dp)
             ) {
                 Text(
                     text = "Settings",
@@ -201,6 +206,115 @@ private fun SettingsContent(
                 // Data
                 item {
                     SettingsSectionHeader("DATA")
+                    
+                    var showDatePicker by remember { mutableStateOf(false) }
+                    if (showDatePicker) {
+                        val datePickerState = rememberDatePickerState(
+                            initialSelectedDateMillis = System.currentTimeMillis()
+                        )
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = DatePickerDefaults.colors(
+                                containerColor = Color.White,
+                            ),
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        datePickerState.selectedDateMillis?.let {
+                                            val date = java.time.Instant.ofEpochMilli(it)
+                                                .atZone(java.time.ZoneId.systemDefault())
+                                                .toLocalDate()
+                                            onSetAttendanceDate(date.toString())
+                                        }
+                                        showDatePicker = false
+                                    },
+                                    colors = ButtonDefaults.textButtonColors(contentColor = PrimaryGreen)
+                                ) {
+                                    Text("OK", fontWeight = FontWeight.Bold)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(
+                                    onClick = { showDatePicker = false },
+                                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                                ) {
+                                    Text("CANCEL", fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        ) {
+                            val selectedDate = datePickerState.selectedDateMillis?.let {
+                                java.time.Instant.ofEpochMilli(it)
+                                    .atZone(java.time.ZoneId.of("UTC"))
+                                    .toLocalDate()
+                            } ?: java.time.LocalDate.now()
+
+                            // Custom Green Header to match the classic Android look from the image
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(PrimaryGreen)
+                                    .padding(vertical = 24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = selectedDate.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()).uppercase(),
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    letterSpacing = 1.sp
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = selectedDate.dayOfMonth.toString(),
+                                    color = Color.White,
+                                    fontSize = 80.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 80.sp
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = selectedDate.month.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault()).uppercase(),
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = selectedDate.year.toString(),
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            }
+
+                            DatePicker(
+                                state = datePickerState,
+                                showModeToggle = false,
+                                title = null,
+                                headline = null,
+                                colors = DatePickerDefaults.colors(
+                                    containerColor = Color.White,
+                                    selectedDayContainerColor = PrimaryGreen,
+                                    selectedDayContentColor = Color.White,
+                                    todayContentColor = PrimaryGreen,
+                                    todayDateBorderColor = PrimaryGreen,
+                                    weekdayContentColor = Color.Gray,
+                                    navigationContentColor = PrimaryGreen,
+                                    yearContentColor = Color.Black,
+                                    currentYearContentColor = PrimaryGreen,
+                                    selectedYearContainerColor = PrimaryGreen,
+                                    selectedYearContentColor = Color.White
+                                )
+                            )
+                        }
+                    }
+
+                    SettingsActionItem(
+                        icon = Icons.Default.CalendarToday,
+                        title = "Attendance Date",
+                        subtitle = if (!state.attendanceDate.isNullOrEmpty()) "Default: ${state.attendanceDate}" else "Set custom date for marking",
+                        onClick = { showDatePicker = true }
+                    )
+
                     SettingsActionItem(
                         iconPainter = painterResource(id = R.drawable.cloud_backup_icon),
                         title = "Create Backup",
@@ -402,7 +516,8 @@ fun SettingsPreview() {
             onToggleNotifications = {},
             onToggleBiometric = {},
             onCreateBackup = {},
-            onRestoreBackup = {}
+            onRestoreBackup = {},
+            onSetAttendanceDate = {}
         )
     }
 }

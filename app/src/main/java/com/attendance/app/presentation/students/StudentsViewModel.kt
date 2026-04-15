@@ -170,7 +170,7 @@ class StudentsViewModel @Inject constructor(
     private fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true) }
-            delay(1000)
+            delay(800)
             refreshTrigger.emit(Unit)
             _state.update { it.copy(isRefreshing = false) }
         }

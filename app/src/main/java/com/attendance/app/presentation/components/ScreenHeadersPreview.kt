@@ -34,6 +34,8 @@ fun StandardHeader(
     showSettings: Boolean = false,
     showSearch: Boolean = false,
     showDate: Boolean = false,
+    date: String? = null,
+    onDateClick: (() -> Unit)? = null,
     onSettingsClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     showSave: Boolean = false,
@@ -80,15 +82,36 @@ fun StandardHeader(
                         )
                     }
                 } else if (showDate) {
-                    val dateFormatted = LocalDate.now().format(
+                    val localDate = try {
+                        if (date != null) LocalDate.parse(date) else LocalDate.now()
+                    } catch (e: Exception) {
+                        LocalDate.now()
+                    }
+                    val dateFormatted = localDate.format(
                         DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.ENGLISH)
                     )
-                    Text(
-                        text = dateFormatted,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = secondaryContentColor,
-                        fontSize = 12.sp // Slightly reduced to fit better
-                    )
+                    Surface(
+                        onClick = { onDateClick?.invoke() },
+                        color = Color.Transparent,
+                        enabled = onDateClick != null
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = dateFormatted,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = secondaryContentColor,
+                                fontSize = 12.sp
+                            )
+                            if (onDateClick != null) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = null,
+                                    tint = secondaryContentColor,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -114,7 +137,7 @@ fun StandardHeader(
                         enabled = !isSaving,
                         shape = RoundedCornerShape(100),
                         color = Color.White,
-                        modifier = Modifier.height(20.dp).offset(y = 6.dp)
+                        modifier = Modifier.height(20.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp),

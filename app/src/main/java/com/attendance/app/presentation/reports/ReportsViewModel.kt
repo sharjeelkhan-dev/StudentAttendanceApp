@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.Instant
@@ -60,8 +61,12 @@ class ReportsViewModel @Inject constructor(
     fun onEvent(event: ReportsEvent) {
         when (event) {
             ReportsEvent.Refresh -> {
-                _state.update { it.copy(isRefreshing = true) }
-                refreshTrigger.tryEmit(Unit)
+                viewModelScope.launch {
+                    _state.update { it.copy(isRefreshing = true) }
+                    kotlinx.coroutines.delay(800)
+                    refreshTrigger.emit(Unit)
+                    _state.update { it.copy(isRefreshing = false) }
+                }
             }
         }
     }
@@ -70,9 +75,10 @@ class ReportsViewModel @Inject constructor(
     private fun loadData() {
         combine(
             preferencesManager.selectedClassIdFlow,
+            preferencesManager.attendanceDateFlow,
             refreshTrigger.onStart { emit(Unit) }
-        ) { classId, _ -> classId }
-            .flatMapLatest { classId ->
+        ) { classId, attendanceDate, _ -> classId to attendanceDate }
+            .flatMapLatest { (classId, _) ->
                 if (classId != -1L) {
                     flow {
                         emit(ReportsState(isLoading = true, selectedClass = _state.value.selectedClass))
@@ -154,8 +160,7 @@ class ReportsViewModel @Inject constructor(
                     selectedClass = newState.selectedClass,
                     studentReports = newState.studentReports,
                     sessionDetails = newState.sessionDetails,
-                    isLoading = newState.isLoading,
-                    isRefreshing = false
+                    isLoading = newState.isLoading
                 ) }
             }
             .catch { _ -> _state.update { it.copy(isLoading = false, isRefreshing = false) } }

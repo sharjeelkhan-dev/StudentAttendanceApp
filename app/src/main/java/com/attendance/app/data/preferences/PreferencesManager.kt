@@ -23,6 +23,7 @@ class PreferencesManager @Inject constructor(
         val SELECTED_CLASS_ID_KEY = longPreferencesKey("selected_class_id")
         val NOTIFICATIONS_ENABLED_KEY = booleanPreferencesKey("notifications_enabled")
         val BIOMETRIC_ENABLED_KEY = booleanPreferencesKey("biometric_enabled")
+        val ATTENDANCE_DATE_KEY = stringPreferencesKey("attendance_date")
         val REMINDER_HOUR_KEY = intPreferencesKey("reminder_hour")
         val REMINDER_MINUTE_KEY = intPreferencesKey("reminder_minute")
     }
@@ -43,6 +44,10 @@ class PreferencesManager @Inject constructor(
         prefs[BIOMETRIC_ENABLED_KEY] ?: false
     }
 
+    val attendanceDateFlow: Flow<String?> = dataStore.data.map { prefs ->
+        prefs[ATTENDANCE_DATE_KEY]
+    }
+
     suspend fun setDarkMode(enabled: Boolean) {
         dataStore.edit { prefs -> prefs[DARK_MODE_KEY] = enabled }
     }
@@ -57,5 +62,9 @@ class PreferencesManager @Inject constructor(
 
     suspend fun setBiometricEnabled(enabled: Boolean) {
         dataStore.edit { prefs -> prefs[BIOMETRIC_ENABLED_KEY] = enabled }
+    }
+
+    suspend fun setAttendanceDate(date: String) {
+        dataStore.edit { prefs -> prefs[ATTENDANCE_DATE_KEY] = date }
     }
 }

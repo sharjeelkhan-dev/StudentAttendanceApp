@@ -91,6 +91,7 @@ private fun AttendanceContent(
             title = "Take Attendance",
             subtitle = "${state.selectedClass?.name ?: "No Class"} · ${state.presentCount} Present · ${state.absentCount} Absent",
             showDate = true,
+            date = state.attendanceDate,
             showSave = true,
             onSaveClick = { onEvent(AttendanceEvent.SaveAttendance) },
             isSaving = state.isSaving,

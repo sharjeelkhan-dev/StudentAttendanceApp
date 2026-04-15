@@ -35,11 +35,13 @@ fun SplashScreen(
     )
     val alpha = animateFloatAsState(
         targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(800, easing = LinearEasing),
+        animationSpec = tween(800,
+            easing = LinearEasing),
         label = "alpha"
     )
 
-    LaunchedEffect(true) {
+    LaunchedEffect(Unit) {
+        startAnimation = true
         delay(1500)
         onSplashComplete()
     }
@@ -79,14 +81,12 @@ private fun SplashContent(
                 text = "Student Attendance",
                 style = MaterialTheme.typography.headlineLarge,
                 color = Color.White,
-                modifier = Modifier.offset(y = (-9).dp),
                 fontWeight = FontWeight.Bold,
                 fontSize = 28.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Manage. Track. Report.",
-                modifier = Modifier.offset(y = (-10).dp),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.8f),
                 fontWeight = FontWeight.Medium

@@ -47,7 +47,11 @@ open class StudentDetailViewModel @Inject constructor(
     }
 
     fun refresh() {
-        loadStudentDetails(isRefreshing = true)
+        viewModelScope.launch {
+            _state.update { it.copy(isRefreshing = true) }
+            kotlinx.coroutines.delay(800)
+            loadStudentDetails(isRefreshing = true)
+        }
     }
 
     private fun loadStudentDetails(isRefreshing: Boolean = false) {

@@ -17,6 +17,7 @@ data class SettingsState(
     val isDarkMode: Boolean = false,
     val isNotificationsEnabled: Boolean = false,
     val isBiometricEnabled: Boolean = false,
+    val attendanceDate: String? = null,
     val backupMessage: String? = null
 )
 
@@ -44,6 +45,17 @@ class SettingsViewModel @Inject constructor(
             preferencesManager.biometricEnabledFlow.collect { enabled ->
                 _state.update { it.copy(isBiometricEnabled = enabled) }
             }
+        }
+        viewModelScope.launch {
+            preferencesManager.attendanceDateFlow.collect { date ->
+                _state.update { it.copy(attendanceDate = date) }
+            }
+        }
+    }
+
+    fun setAttendanceDate(date: String) {
+        viewModelScope.launch {
+            preferencesManager.setAttendanceDate(date)
         }
     }
 

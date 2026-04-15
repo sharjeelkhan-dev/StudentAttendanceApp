@@ -33,6 +33,7 @@ data class AttendanceState(
     val isSaved: Boolean = false,
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
+    val attendanceDate: String? = null,
     val error: String? = null
 )
 
@@ -67,17 +68,18 @@ class AttendanceViewModel @Inject constructor(
     private fun loadData() {
         combine(
             preferencesManager.selectedClassIdFlow,
+            preferencesManager.attendanceDateFlow,
             refreshTrigger
-        ) { classId, _ -> classId }
-            .filter { it != -1L }
-            .flatMapLatest { classId ->
+        ) { classId, attendanceDate, _ -> classId to attendanceDate }
+            .filter { it.first != -1L }
+            .flatMapLatest { (classId, attendanceDate) ->
                 flow {
-                    emit(AttendanceState(isLoading = true))
+                    emit(_state.value.copy(isLoading = true))
                     
                     val classModel = classRepository.getClassById(classId)
                     val students = studentRepository.getStudentsByClass(classId).first()
-                    val today = LocalDate.now().toString()
-                    val existingRecords = attendanceRepository.getAttendanceByClassAndDate(classId, today).first()
+                    val dateStr = attendanceDate ?: LocalDate.now().toString()
+                    val existingRecords = attendanceRepository.getAttendanceByClassAndDate(classId, dateStr).first()
 
                     val sortedStudents = students.sortedBy { it.createdAt }
                     val studentStates = sortedStudents.map { student ->
@@ -88,12 +90,14 @@ class AttendanceViewModel @Inject constructor(
                         )
                     }
                     
-                    emit(AttendanceState(
+                    emit(_state.value.copy(
                         selectedClass = classModel,
                         students = studentStates,
                         presentCount = studentStates.count { s -> s.status == AttendanceStatus.PRESENT },
                         absentCount = studentStates.count { s -> s.status == AttendanceStatus.ABSENT },
-                        isLoading = false
+                        isLoading = false,
+                        isSaved = existingRecords.isNotEmpty(),
+                        attendanceDate = dateStr
                     ))
                 }
             }
@@ -105,6 +109,8 @@ class AttendanceViewModel @Inject constructor(
                         presentCount = newState.presentCount,
                         absentCount = newState.absentCount,
                         isLoading = newState.isLoading,
+                        isSaved = newState.isSaved,
+                        attendanceDate = newState.attendanceDate,
                         error = newState.error
                     ) 
                 } 
@@ -175,9 +181,9 @@ class AttendanceViewModel @Inject constructor(
     private fun saveAttendance() {
         val currentState = _state.value
         val classId = currentState.selectedClass?.id ?: return
-        val date = LocalDate.now().toString()
-
+        
         viewModelScope.launch {
+            val date = preferencesManager.attendanceDateFlow.first() ?: LocalDate.now().toString()
             _state.update { it.copy(isSaving = true) }
             val records = currentState.students.map {
                 AttendanceRecord(
