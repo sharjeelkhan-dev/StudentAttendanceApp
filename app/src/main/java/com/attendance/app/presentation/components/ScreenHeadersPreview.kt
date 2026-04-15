@@ -114,7 +114,7 @@ fun StandardHeader(
                         enabled = !isSaving,
                         shape = RoundedCornerShape(100),
                         color = Color.White,
-                        modifier = Modifier.height(20.dp)
+                        modifier = Modifier.height(20.dp).offset(y = 6.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp),
@@ -167,7 +167,7 @@ fun StandardHeader(
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
                         onClick = onSettingsClick,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp).offset(y = 6.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.setting_icon),
