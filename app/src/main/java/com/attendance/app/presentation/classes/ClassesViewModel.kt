@@ -17,7 +17,8 @@ data class ClassesState(
     val newClassName: String = "",
     val newClassSection: String = "",
     val editingClass: ClassModel? = null,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false
 )
 
 sealed class ClassesEvent {
@@ -30,6 +31,7 @@ sealed class ClassesEvent {
     data class StartEdit(val classModel: ClassModel) : ClassesEvent()
     data object SaveEdit : ClassesEvent()
     data object CancelEdit : ClassesEvent()
+    data object Refresh : ClassesEvent()
 }
 
 @HiltViewModel
@@ -90,6 +92,17 @@ class ClassesViewModel @Inject constructor(
                     it.copy(editingClass = null, isAddFormVisible = false, newClassName = "", newClassSection = "")
                 }
             }
+            is ClassesEvent.Refresh -> refresh()
+        }
+    }
+
+    private fun refresh() {
+        viewModelScope.launch {
+            _state.update { it.copy(isRefreshing = true) }
+            // Since we are observing a Flow from Room, it updates automatically.
+            // We just add a small delay to show the animation.
+            kotlinx.coroutines.delay(800)
+            _state.update { it.copy(isRefreshing = false) }
         }
     }
 

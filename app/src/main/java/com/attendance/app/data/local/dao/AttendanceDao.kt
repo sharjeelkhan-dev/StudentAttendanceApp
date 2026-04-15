@@ -62,6 +62,9 @@ interface AttendanceDao {
     fun getRecentSessions(classId: Long, limit: Int): Flow<List<String>>
 
     @Query("SELECT * FROM attendance WHERE classId = :classId")
+    fun getAllAttendanceForClassFlow(classId: Long): Flow<List<AttendanceEntity>>
+
+    @Query("SELECT * FROM attendance WHERE classId = :classId")
     suspend fun getAllAttendanceForClass(classId: Long): List<AttendanceEntity>
 
     @Query("SELECT * FROM attendance")

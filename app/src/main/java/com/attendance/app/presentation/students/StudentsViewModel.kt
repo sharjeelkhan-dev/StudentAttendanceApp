@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -31,7 +32,8 @@ data class StudentsState(
     val isSaving: Boolean = false,
     val editingStudent: Student? = null,
     val error: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val isRefreshing: Boolean = false
 )
 
 sealed class StudentsEvent {
@@ -45,6 +47,7 @@ sealed class StudentsEvent {
     data object SaveEdit : StudentsEvent()
     data object ClearError : StudentsEvent()
     data object ClearSuccess : StudentsEvent()
+    data object Refresh : StudentsEvent()
 }
 
 @HiltViewModel
@@ -57,22 +60,28 @@ class StudentsViewModel @Inject constructor(
     private val _state = MutableStateFlow(StudentsState())
     val state: StateFlow<StudentsState> = _state.asStateFlow()
 
+    private val refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
     init {
         observeData()
+        refreshTrigger.tryEmit(Unit)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeData() {
-        preferencesManager.selectedClassIdFlow
-            .onEach { _state.update { it.copy(isLoading = true) } }
+        combine(
+            preferencesManager.selectedClassIdFlow,
+            refreshTrigger
+        ) { classId, _ -> classId }
             .flatMapLatest { classId ->
                 if (classId != -1L) {
-                    val classModel = classRepository.getClassById(classId)
-                    _state.update { it.copy(selectedClass = classModel) }
-                    
-                    studentRepository.getStudentsByClass(classId).map { students ->
-                        // Perform heavy calculations and sorting on Default dispatcher
-                        withContext(Dispatchers.Default) {
+                    flow {
+                        emit(StudentsState(isLoading = true, selectedClass = _state.value.selectedClass))
+                        
+                        val classModel = classRepository.getClassById(classId)
+                        val students = studentRepository.getStudentsByClass(classId).first()
+                        
+                        val withPct = withContext(Dispatchers.Default) {
                             students.map { student ->
                                 async {
                                     val pct = try {
@@ -85,6 +94,12 @@ class StudentsViewModel @Inject constructor(
                             }.awaitAll()
                             .sortedByDescending { it.student.createdAt }
                         }
+                        
+                        emit(StudentsState(
+                            selectedClass = classModel,
+                            students = withPct,
+                            isLoading = false
+                        ))
                     }
                 } else {
                     // Try to auto-select if classes exist
@@ -95,12 +110,16 @@ class StudentsViewModel @Inject constructor(
                         }
                     }
                     _state.update { it.copy(selectedClass = null, students = emptyList(), isLoading = false) }
-                    flowOf(emptyList())
+                    flowOf(StudentsState(isLoading = false))
                 }
             }
-            .flowOn(Dispatchers.Default) // Ensure the flow processing happens off-main
-            .onEach { withPct ->
-                _state.update { it.copy(students = withPct, isLoading = false) }
+            .onEach { newState ->
+                _state.update { it.copy(
+                    selectedClass = newState.selectedClass,
+                    students = newState.students,
+                    isLoading = newState.isLoading,
+                    error = newState.error
+                ) }
             }
             .catch { e ->
                 _state.update { it.copy(isLoading = false, error = "Failed to load: ${e.localizedMessage}") }
@@ -144,6 +163,16 @@ class StudentsViewModel @Inject constructor(
             is StudentsEvent.SaveEdit -> saveEdit()
             is StudentsEvent.ClearError -> _state.update { it.copy(error = null) }
             is StudentsEvent.ClearSuccess -> _state.update { it.copy(successMessage = null) }
+            is StudentsEvent.Refresh -> refresh()
+        }
+    }
+
+    private fun refresh() {
+        viewModelScope.launch {
+            _state.update { it.copy(isRefreshing = true) }
+            delay(1000)
+            refreshTrigger.emit(Unit)
+            _state.update { it.copy(isRefreshing = false) }
         }
     }
 

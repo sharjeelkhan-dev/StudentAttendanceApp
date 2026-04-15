@@ -10,6 +10,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,51 +68,67 @@ private fun ClassesContent(
             )
 
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        bottom = paddingValues.calculateBottomPadding() + 80.dp // Extra padding for FAB
-                    )
-                ) {
-                    // Classes Header
-                    item {
-                        Text(
-                            text = "YOUR CLASSES",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha=0.6f),
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp,
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                val pullToRefreshState = rememberPullToRefreshState()
+                PullToRefreshBox(
+                    isRefreshing = state.isRefreshing,
+                    onRefresh = { onEvent(ClassesEvent.Refresh) },
+                    state = pullToRefreshState,
+                    indicator = {
+                        PullToRefreshDefaults.Indicator(
+                            state = pullToRefreshState,
+                            isRefreshing = state.isRefreshing,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            color = PrimaryGreen,
+                            modifier = Modifier.align(Alignment.TopCenter)
                         )
                     }
-
-                    if (state.classes.isEmpty() && !state.isLoading) {
+                ) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            bottom = paddingValues.calculateBottomPadding() + 80.dp // Extra padding for FAB
+                        )
+                    ) {
+                        // Classes Header
                         item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "No classes yet.\nCreate your first class to get started!",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha=0.6f),
-                                    textAlign = TextAlign.Center
+                            Text(
+                                text = "YOUR CLASSES",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp,
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                            )
+                        }
+
+                        if (state.classes.isEmpty() && !state.isLoading) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(32.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No classes yet.\nCreate your first class to get started!",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        } else {
+                            items(state.classes, key = { it.id }) { classModel ->
+                                val isSelected = classModel.id == state.selectedClassId
+                                ClassRow(
+                                    classModel = classModel,
+                                    isSelected = isSelected,
+                                    onSelect = { onEvent(ClassesEvent.SelectClass(classModel)) },
+                                    onEdit = { onEvent(ClassesEvent.StartEdit(classModel)) },
+                                    onDelete = { onEvent(ClassesEvent.DeleteClass(classModel)) }
                                 )
                             }
-                        }
-                    } else {
-                        items(state.classes, key = { it.id }) { classModel ->
-                            val isSelected = classModel.id == state.selectedClassId
-                            ClassRow(
-                                classModel = classModel,
-                                isSelected = isSelected,
-                                onSelect = { onEvent(ClassesEvent.SelectClass(classModel)) },
-                                onEdit = { onEvent(ClassesEvent.StartEdit(classModel)) },
-                                onDelete = { onEvent(ClassesEvent.DeleteClass(classModel)) }
-                            )
                         }
                     }
                 }

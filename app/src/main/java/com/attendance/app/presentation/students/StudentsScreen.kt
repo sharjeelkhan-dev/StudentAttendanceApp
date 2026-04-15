@@ -12,6 +12,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
 import com.attendance.app.R
 import com.attendance.app.domain.model.ClassModel
 import com.attendance.app.domain.model.Student
@@ -43,6 +47,16 @@ fun StudentsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    var showLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(state.isLoading) {
+        if (state.isLoading) {
+            showLoading = true
+        } else {
+            delay(800)
+            showLoading = false
+        }
+    }
 
     LaunchedEffect(state.error) {
         state.error?.let {
@@ -66,6 +80,7 @@ fun StudentsScreen(
     ) { innerPadding ->
         StudentsContent(
             state = state,
+            showLoading = showLoading,
             onStudentClick = onStudentClick,
             onEvent = viewModel::onEvent,
             modifier = Modifier.fillMaxSize().padding(innerPadding),
@@ -74,10 +89,11 @@ fun StudentsScreen(
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun StudentsContent(
     state: StudentsState,
+    showLoading: Boolean,
     onStudentClick: (Student, Color) -> Unit,
     onEvent: (StudentsEvent) -> Unit,
     modifier: Modifier = Modifier,
@@ -85,6 +101,7 @@ private fun StudentsContent(
 ) {
     val isDark = LocalIsDarkMode.current
     val listState = rememberLazyListState()
+    val pullToRefreshState = rememberPullToRefreshState()
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         StandardHeader(
@@ -94,7 +111,21 @@ private fun StudentsContent(
             } ?: "No Class Selected"
         )
 
-        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { onEvent(StudentsEvent.Refresh) },
+            state = pullToRefreshState,
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = pullToRefreshState,
+                    isRefreshing = state.isRefreshing,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    color = PrimaryGreen,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            },
+            modifier = Modifier.fillMaxWidth().weight(1f)
+        ) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
@@ -161,7 +192,7 @@ private fun StudentsContent(
                 modifier = Modifier.align(Alignment.CenterEnd)
             )
 
-            if (state.isLoading) {
+            if (showLoading && !state.isRefreshing) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
@@ -184,43 +215,43 @@ private fun StudentsContent(
                     Icon(Icons.Default.Add, contentDescription = "Add Student", modifier = Modifier.size(28.dp))
                 }
             }
-
-            // Pop-up Add Form
-            if (state.isAddFormVisible) {
-                Dialog(
-                    onDismissRequest = { 
-                        if (state.editingStudent != null) onEvent(StudentsEvent.CancelEdit)
-                        else onEvent(StudentsEvent.ToggleAddForm)
-                    }
+        }
+        
+        // Pop-up Add Form
+        if (state.isAddFormVisible) {
+            Dialog(
+                onDismissRequest = { 
+                    if (state.editingStudent != null) onEvent(StudentsEvent.CancelEdit)
+                    else onEvent(StudentsEvent.ToggleAddForm)
+                }
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    shape = RoundedCornerShape(28.dp),
+                    color = MaterialTheme.colorScheme.surface
                 ) {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight(),
-                        shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surface
-                    ) {
-                        AddStudentForm(
-                            name = state.newStudentName,
-                            rollNumber = state.newStudentRoll,
-                            isEditing = state.editingStudent != null,
-                            isSaving = state.isSaving,
-                            onNameChange = { onEvent(StudentsEvent.UpdateNewName(it)) },
-                            onRollChange = { onEvent(StudentsEvent.UpdateNewRoll(it)) },
-                            onSubmit = {
-                                if (state.editingStudent != null)
-                                    onEvent(StudentsEvent.SaveEdit)
-                                else
-                                    onEvent(StudentsEvent.AddStudent)
-                            },
-                            onCancel = {
-                                if (state.editingStudent != null)
-                                    onEvent(StudentsEvent.CancelEdit)
-                                else
-                                    onEvent(StudentsEvent.ToggleAddForm)
-                            }
-                        )
-                    }
+                    AddStudentForm(
+                        name = state.newStudentName,
+                        rollNumber = state.newStudentRoll,
+                        isEditing = state.editingStudent != null,
+                        isSaving = state.isSaving,
+                        onNameChange = { onEvent(StudentsEvent.UpdateNewName(it)) },
+                        onRollChange = { onEvent(StudentsEvent.UpdateNewRoll(it)) },
+                        onSubmit = {
+                            if (state.editingStudent != null)
+                                onEvent(StudentsEvent.SaveEdit)
+                            else
+                                onEvent(StudentsEvent.AddStudent)
+                        },
+                        onCancel = {
+                            if (state.editingStudent != null)
+                                onEvent(StudentsEvent.CancelEdit)
+                            else
+                                onEvent(StudentsEvent.ToggleAddForm)
+                        }
+                    )
                 }
             }
         }
@@ -474,6 +505,7 @@ fun StudentsScreenPreview() {
                             ),
                             isLoading = false
                         ),
+                        showLoading = false,
                         onStudentClick = { _, _ -> },
                         // 'this' correctly provides the AnimatedVisibilityScope
                         onEvent = {}
@@ -504,6 +536,7 @@ fun StudentsScreenEmptyPreview() {
                             students = emptyList(),
                             isLoading = false
                         ),
+                        showLoading = false,
                         onStudentClick = { _, _ -> },
                         // 'this' refers to the AnimatedVisibilityScope provided by AnimatedContent
                         onEvent = {}
@@ -531,6 +564,7 @@ fun StudentsScreenAddFormPreview() {
                             newStudentRoll = "CS-01",
                             isLoading = false
                         ),
+                        showLoading = false,
                         onStudentClick = { _, _ -> },
                         // 'this' refers to the AnimatedContentScope required for shared elements
                         onEvent = {}

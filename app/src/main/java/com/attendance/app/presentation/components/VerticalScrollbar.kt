@@ -2,6 +2,7 @@ package com.attendance.app.presentation.components
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.attendance.app.presentation.theme.LocalIsDarkMode
@@ -137,6 +139,88 @@ fun VerticalScrollbar(
                     .clip(CircleShape)
                     .background(scrollbarColor)
             )
+        }
+    }
+}
+
+@Composable
+fun VerticalScrollbar(
+    scrollState: ScrollState,
+    modifier: Modifier = Modifier,
+    thickness: Dp = 3.dp,
+    color: Color? = null
+) {
+    val isDark = LocalIsDarkMode.current
+    val scrollbarColor = color ?: if (isDark) {
+        Color.White.copy(alpha = 0.5f)
+    } else {
+        Color.Black.copy(alpha = 0.3f)
+    }
+
+    // Scrollbar visibility state
+    var isVisible by remember { mutableStateOf(false) }
+
+    // Handle auto-hide logic for ScrollState
+    LaunchedEffect(scrollState) {
+        snapshotFlow {
+            Triple(scrollState.value, scrollState.maxValue, scrollState.isScrollInProgress)
+        }.collectLatest {
+            isVisible = true
+            if (!scrollState.isScrollInProgress) {
+                delay(1500)
+                isVisible = false
+            }
+        }
+    }
+
+    // Smooth visibility transition
+    val alpha by animateFloatAsState(
+        targetValue = if (isVisible && scrollState.maxValue > 0) 1f else 0f,
+        animationSpec = tween(durationMillis = 400),
+        label = "ScrollbarAlpha"
+    )
+
+    if (alpha > 0f) {
+        BoxWithConstraints(
+            modifier = modifier
+                .fillMaxHeight()
+                .width(thickness + 8.dp) // Hit area for potential interaction
+                .graphicsLayer { this.alpha = alpha },
+            contentAlignment = Alignment.TopCenter
+        ) {
+            val density = LocalDensity.current
+            val scrollbarMetrics by remember(scrollState, maxHeight, density) {
+                derivedStateOf {
+                    val maxValue = scrollState.maxValue.toFloat()
+                    if (maxValue <= 0f) return@derivedStateOf null
+
+                    val viewportHeight = with(density) { maxHeight.toPx() }
+                    if (viewportHeight <= 0f) return@derivedStateOf null
+
+                    val totalHeight = maxValue + viewportHeight
+                    val scrollPercent = (scrollState.value.toFloat() / maxValue).coerceIn(0f, 1f)
+                    val visiblePercent = (viewportHeight / totalHeight).coerceIn(0.1f, 0.9f)
+
+                    scrollPercent to visiblePercent
+                }
+            }
+
+            scrollbarMetrics?.let { (scrollPercent, visiblePercent) ->
+                val handleHeight = maxHeight * visiblePercent
+                Box(
+                    modifier = Modifier
+                        .width(thickness)
+                        .height(handleHeight.coerceAtLeast(32.dp))
+                        .graphicsLayer {
+                            val trackHeightPx = maxHeight.toPx()
+                            val handleHeightPx = size.height
+                            val maxTravel = trackHeightPx - handleHeightPx
+                            translationY = scrollPercent * maxTravel
+                        }
+                        .clip(CircleShape)
+                        .background(scrollbarColor)
+                )
+            }
         }
     }
 }

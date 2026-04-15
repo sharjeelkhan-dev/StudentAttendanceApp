@@ -12,6 +12,7 @@ import com.attendance.app.domain.repository.ClassRepository
 import com.attendance.app.domain.repository.StudentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -31,6 +32,7 @@ data class AttendanceState(
     val isSaving: Boolean = false,
     val isSaved: Boolean = false,
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val error: String? = null
 )
 
@@ -40,6 +42,7 @@ sealed class AttendanceEvent {
     object MarkAllAbsent : AttendanceEvent()
     object SaveAttendance : AttendanceEvent()
     data class SearchQueryChanged(val query: String) : AttendanceEvent()
+    object Refresh : AttendanceEvent()
 }
 
 @HiltViewModel
@@ -53,22 +56,30 @@ class AttendanceViewModel @Inject constructor(
     private val _state = MutableStateFlow(AttendanceState())
     val state: StateFlow<AttendanceState> = _state.asStateFlow()
 
+    private val refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
     init {
         loadData()
+        refreshTrigger.tryEmit(Unit)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadData() {
-        preferencesManager.selectedClassIdFlow
+        combine(
+            preferencesManager.selectedClassIdFlow,
+            refreshTrigger
+        ) { classId, _ -> classId }
             .filter { it != -1L }
             .flatMapLatest { classId ->
-                val classModelFlow = flow { emit(classRepository.getClassById(classId)) }
-                val studentsFlow = studentRepository.getStudentsByClass(classId)
-                val today = LocalDate.now().toString()
-                val attendanceFlow = attendanceRepository.getAttendanceByClassAndDate(classId, today)
+                flow {
+                    emit(AttendanceState(isLoading = true))
+                    
+                    val classModel = classRepository.getClassById(classId)
+                    val students = studentRepository.getStudentsByClass(classId).first()
+                    val today = LocalDate.now().toString()
+                    val existingRecords = attendanceRepository.getAttendanceByClassAndDate(classId, today).first()
 
-                combine(classModelFlow, studentsFlow, attendanceFlow) { classModel, students, existingRecords ->
-                    val sortedStudents = students.sortedBy { it.createdAt } // Sort by enrollment date (oldest first)
+                    val sortedStudents = students.sortedBy { it.createdAt }
                     val studentStates = sortedStudents.map { student ->
                         val existing = existingRecords.find { it.studentId == student.id }
                         StudentAttendanceState(
@@ -76,13 +87,14 @@ class AttendanceViewModel @Inject constructor(
                             status = existing?.status ?: AttendanceStatus.PRESENT
                         )
                     }
-                    AttendanceState(
+                    
+                    emit(AttendanceState(
                         selectedClass = classModel,
                         students = studentStates,
                         presentCount = studentStates.count { s -> s.status == AttendanceStatus.PRESENT },
                         absentCount = studentStates.count { s -> s.status == AttendanceStatus.ABSENT },
                         isLoading = false
-                    )
+                    ))
                 }
             }
             .onEach { newState -> 
@@ -92,7 +104,8 @@ class AttendanceViewModel @Inject constructor(
                         students = newState.students,
                         presentCount = newState.presentCount,
                         absentCount = newState.absentCount,
-                        isLoading = false
+                        isLoading = newState.isLoading,
+                        error = newState.error
                     ) 
                 } 
             }
@@ -144,6 +157,18 @@ class AttendanceViewModel @Inject constructor(
             is AttendanceEvent.SearchQueryChanged -> {
                 _state.update { it.copy(searchQuery = event.query) }
             }
+            AttendanceEvent.Refresh -> {
+                refresh()
+            }
+        }
+    }
+
+    private fun refresh() {
+        viewModelScope.launch {
+            _state.update { it.copy(isRefreshing = true) }
+            delay(800)
+            refreshTrigger.emit(Unit)
+            _state.update { it.copy(isRefreshing = false) }
         }
     }
 

@@ -8,6 +8,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,11 +70,13 @@ fun HomeScreen(
         onNavigateToStudents = onNavigateToStudents,
         onNavigateToSettings = onNavigateToSettings,
         onImportClick = { filePickerLauncher.launch("*/*") },
+        onRefresh = { viewModel.refresh() },
         modifier = modifier,
         paddingValues = paddingValues
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeContent(
     state: HomeState,
@@ -81,11 +86,13 @@ private fun HomeContent(
     onNavigateToStudents: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onImportClick: () -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues(0.dp)
 ) {
     val isDark = LocalIsDarkMode.current
     val listState = rememberLazyListState()
+    val pullToRefreshState = rememberPullToRefreshState()
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         // Header (Locked at fixed position)
@@ -100,21 +107,35 @@ private fun HomeContent(
         )
 
         Box(modifier = Modifier.fillMaxSize().weight(1f)) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    bottom = paddingValues.calculateBottomPadding() + 16.dp
-                )
-            ) {
-                // Stats Row
-                item {
-                    StatsRow(
-                        total = state.totalStudents,
-                        present = state.presentToday,
-                        absent = state.absentToday
+            PullToRefreshBox(
+                isRefreshing = state.isRefreshing,
+                onRefresh = onRefresh,
+                state = pullToRefreshState,
+                indicator = {
+                    PullToRefreshDefaults.Indicator(
+                        state = pullToRefreshState,
+                        isRefreshing = state.isRefreshing,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        color = PrimaryGreen,
+                        modifier = Modifier.align(Alignment.TopCenter)
                     )
                 }
+            ) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        bottom = paddingValues.calculateBottomPadding() + 16.dp
+                    )
+                ) {
+                    // Stats Row
+                    item {
+                        StatsRow(
+                            total = state.totalStudents,
+                            present = state.presentToday,
+                            absent = state.absentToday
+                        )
+                    }
                     // Quick Actions
                     item {
                         QuickActionsSection(
@@ -144,9 +165,9 @@ private fun HomeContent(
                                 )
                                 if (state.selectedClass != null) {
                                     Text(
-                                        text = if (state.selectedClass.section.isNotEmpty()) 
-                                            "${state.selectedClass.name} — ${state.selectedClass.section}" 
-                                            else state.selectedClass.name,
+                                        text = if (state.selectedClass.section.isNotEmpty())
+                                            "${state.selectedClass.name} — ${state.selectedClass.section}"
+                                        else state.selectedClass.name,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color.Gray
                                     )
@@ -207,22 +228,26 @@ private fun HomeContent(
                                 absentCount = session.summary.absentCount,
                                 percentage = session.summary.percentage,
                                 studentNames = sortedStudents,
-                                modifier = Modifier.padding(horizontal = 20.dp,
-                                    vertical = 8.dp)
+                                modifier = Modifier.padding(
+                                    horizontal = 20.dp,
+                                    vertical = 8.dp
+                                )
                             )
                         }
                     }
                 }
-
-                VerticalScrollbar(
-                    lazyListState = listState,
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(top = 12.dp)
-                )
             }
+
+            VerticalScrollbar(
+                lazyListState = listState,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(top = 12.dp)
+            )
         }
     }
+}
+
 
 @Composable
 private fun StatsRow(
@@ -400,6 +425,7 @@ fun HomePreview() {
             onNavigateToStudents = {},
             onNavigateToSettings = {},
             onImportClick = {},
+            onRefresh = {},
             greeting = "Good Morning"
         )
     }

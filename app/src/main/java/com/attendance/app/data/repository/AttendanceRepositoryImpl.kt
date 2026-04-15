@@ -55,6 +55,12 @@ class AttendanceRepositoryImpl @Inject constructor(
         return attendanceDao.getSessionDates(classId)
     }
 
+    override fun getAllAttendanceForClassFlow(classId: Long): Flow<List<AttendanceRecord>> {
+        return attendanceDao.getAllAttendanceForClassFlow(classId).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     override suspend fun getAllAttendanceForClass(classId: Long): List<AttendanceRecord> {
         return attendanceDao.getAllAttendanceForClass(classId).map { it.toDomain() }
     }

@@ -15,6 +15,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,11 +31,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.attendance.app.domain.model.AttendanceStatus
 import com.attendance.app.presentation.components.StatsCard
+import com.attendance.app.presentation.components.VerticalScrollbar
 import com.attendance.app.presentation.theme.*
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SharedTransitionScope.StudentDetailScreen(
     studentName: String,
@@ -44,6 +49,17 @@ fun SharedTransitionScope.StudentDetailScreen(
     onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    
+    var showLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(state.isLoading) {
+        if (state.isLoading) {
+            showLoading = true
+        } else {
+            delay(800)
+            showLoading = false
+        }
+    }
+
     val currentStudentName = state.student?.fullName ?: studentName
     val currentStudentRoll = state.student?.rollNumber ?: studentRoll
     val currentInitials = state.student?.initials ?: initials
@@ -99,133 +115,168 @@ fun SharedTransitionScope.StudentDetailScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        val scrollState = rememberScrollState()
+        
+        val pullToRefreshState = rememberPullToRefreshState()
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { viewModel.refresh() },
+            state = pullToRefreshState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(innerPadding),
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = pullToRefreshState,
+                    isRefreshing = state.isRefreshing,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    color = PrimaryGreen,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
         ) {
-            // Avatar Section
-            Spacer(modifier = Modifier.height(40.dp))
-            Surface(
-                shape = CircleShape,
-                color = avatarColor,
-                modifier = Modifier
-                    .size(140.dp)
-                    .sharedElement(
-                        rememberSharedContentState(key = "avatar_$studentRoll"),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    )
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = currentInitials,
-                        color = Color.White,
-                        fontSize = 56.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+            if (showLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = PrimaryGreen)
                 }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Name
-            Text(
-                text = currentStudentName,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.sharedElement(
-                    rememberSharedContentState(key = "name_$studentRoll"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                )
-            )
-            
-            // Roll Number
-            Text(
-                text = "Roll Number: $currentStudentRoll",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(36.dp))
-
-            // Stats Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .offset(y = (-13).dp)
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                StatsCard(
-                    label = "Present",
-                    value = String.format(Locale.getDefault(), "%02d", state.presentCount),
-                    valueColor = PresentGreen,
-                    modifier = Modifier.weight(1f)
-                )
-                StatsCard(
-                    label = "Absent",
-                    value = String.format(Locale.getDefault(), "%02d", state.absentCount),
-                    valueColor = AbsentRed,
-                    modifier = Modifier.weight(1f)
-                )
-                StatsCard(
-                    label = "Attendance",
-                    value = String.format(Locale.getDefault(), "%.0f%%", state.attendancePercentage),
-                    valueColor = Color(0xFF00ACC1),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Attendance Statistics Graph
-            AttendanceChart(
-                studentData = state.weeklyStudentData,
-                classAvgData = state.weeklyClassAvgData,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Info Section
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    val enrollmentDate = remember(state.student?.createdAt) {
-                        state.student?.createdAt?.let {
-                            SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date(it))
-                        } ?: "N/A"
+            } else {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                    // Avatar Section
+                    Spacer(modifier = Modifier.height(40.dp))
+                    Surface(
+                        shape = CircleShape,
+                        color = avatarColor,
+                        modifier = Modifier
+                            .size(140.dp)
+                            .sharedElement(
+                                rememberSharedContentState(key = "avatar_$studentRoll"),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            )
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = currentInitials,
+                                color = Color.White,
+                                fontSize = 56.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
-                    DetailRow(
-                        icon = Icons.Rounded.CalendarMonth,
-                        label = "Enrollment Date",
-                        value = enrollmentDate
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Name
+                    Text(
+                        text = currentStudentName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.sharedElement(
+                            rememberSharedContentState(key = "name_$studentRoll"),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        )
                     )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    DetailRow(
-                        icon = Icons.Rounded.School,
-                        label = "Assigned Class",
-                        value = state.classModel?.let { "${it.name} (${it.section})" } ?: "N/A"
+                    
+                    // Roll Number
+                    Text(
+                        text = "Roll Number: $currentStudentRoll",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(36.dp))
+
+                    // Stats Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(y = (-13).dp)
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        StatsCard(
+                            label = "Present",
+                            value = String.format(Locale.getDefault(), "%02d", state.presentCount),
+                            valueColor = PresentGreen,
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatsCard(
+                            label = "Absent",
+                            value = String.format(Locale.getDefault(), "%02d", state.absentCount),
+                            valueColor = AbsentRed,
+                            modifier = Modifier.weight(1f)
+                        )
+                        StatsCard(
+                            label = "Attendance",
+                            value = String.format(Locale.getDefault(), "%.0f%%", state.attendancePercentage),
+                            valueColor = Color(0xFF00ACC1),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Attendance Statistics Graph
+                    AttendanceChart(
+                        studentData = state.weeklyStudentData,
+                        classAvgData = state.weeklyClassAvgData,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Info Section
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            val enrollmentDate = remember(state.student?.createdAt) {
+                                state.student?.createdAt?.let {
+                                    SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date(it))
+                                } ?: "N/A"
+                            }
+                            DetailRow(
+                                icon = Icons.Rounded.CalendarMonth,
+                                label = "Enrollment Date",
+                                value = enrollmentDate
+                            )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            DetailRow(
+                                icon = Icons.Rounded.School,
+                                label = "Assigned Class",
+                                value = state.classModel?.let { "${it.name} (${it.section})" } ?: "N/A"
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(40.dp))
+                    }
+
+                    VerticalScrollbar(
+                        scrollState = scrollState,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(end = 4.dp, top = 12.dp, bottom = 12.dp)
                     )
                 }
             }
-            
-            Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }
@@ -325,12 +376,10 @@ private fun AttendanceChart(
                                 val classValue = classAvgData.getOrElse(index) { 0f }
 
                                 Bar(
-                                    value = studentValue,
                                     color = AbsentRed,
                                     modifier = Modifier.fillMaxHeight((studentValue / 100f).coerceIn(0.01f, 1f))
                                 )
                                 Bar(
-                                    value = classValue,
                                     color = Color(0xFF4A90E2),
                                     modifier = Modifier.fillMaxHeight((classValue / 100f).coerceIn(0.01f, 1f))
                                 )
@@ -380,7 +429,7 @@ private fun LegendItem(color: Color, label: String) {
 }
 
 @Composable
-private fun Bar(value: Float, color: Color, modifier: Modifier = Modifier) {
+private fun Bar(color: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .width(12.dp)
@@ -481,6 +530,7 @@ class StudentDetailViewModelPreview : StudentDetailViewModel(
         override fun getSessionSummary(classId: Long, date: String) = error("Not implemented")
         override fun getRecentSessions(classId: Long, limit: Int) = error("Not implemented")
         override fun getSessionDates(classId: Long) = error("Not implemented")
+        override fun getAllAttendanceForClassFlow(classId: Long) = error("Not implemented")
         override suspend fun getAllAttendanceForClass(classId: Long) = emptyList<com.attendance.app.domain.model.AttendanceRecord>()
         override suspend fun getAllAttendance() = emptyList<com.attendance.app.domain.model.AttendanceRecord>()
     },

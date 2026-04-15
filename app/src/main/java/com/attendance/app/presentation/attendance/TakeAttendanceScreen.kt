@@ -10,6 +10,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +31,7 @@ import com.attendance.app.domain.model.Student
 import com.attendance.app.presentation.components.StandardHeader
 import com.attendance.app.presentation.components.VerticalScrollbar
 import com.attendance.app.presentation.theme.*
+import kotlinx.coroutines.delay
 
 @Composable
 fun TakeAttendanceScreen(
@@ -36,8 +40,20 @@ fun TakeAttendanceScreen(
     viewModel: AttendanceViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    
+    var showLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(state.isLoading) {
+        if (state.isLoading) {
+            showLoading = true
+        } else {
+            delay(800)
+            showLoading = false
+        }
+    }
+
     AttendanceContent(
         state = state,
+        showLoading = showLoading,
         onEvent = viewModel::onEvent,
         modifier = modifier,
         paddingValues = paddingValues
@@ -47,6 +63,7 @@ fun TakeAttendanceScreen(
 @Composable
 private fun AttendanceContent(
     state: AttendanceState,
+    showLoading: Boolean,
     onEvent: (AttendanceEvent) -> Unit,
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues(0.dp)
@@ -62,6 +79,7 @@ private fun AttendanceContent(
 
     val isDark = LocalIsDarkMode.current
     val listState = rememberLazyListState()
+    val pullToRefreshState = rememberPullToRefreshState()
 
     Column(
         modifier = modifier
@@ -79,117 +97,140 @@ private fun AttendanceContent(
             isSaved = state.isSaved
         )
 
-        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = listState
-            ) {
-                // Search Bar
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 15.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Search Bar
-                        Surface(
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(24.dp),
-                            color = if (isDark) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) else Color(0xFFF2F4F7),
-                            tonalElevation = 2.dp,
-                            border = if (isDark) 
-                                androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)) 
-                            else 
-                                androidx.compose.foundation.BorderStroke(1.dp, Color.Black.copy(alpha = 0.1f))
-                        ) {
-                            TextField(
-                                value = state.searchQuery,
-                                onValueChange = { onEvent(AttendanceEvent.SearchQueryChanged(it)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { 
-                                    Text(
-                                        "Search student...",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                                    ) 
-                                },
-                                leadingIcon = { 
-                                    Icon(
-                                        Icons.Default.Search, 
-                                        contentDescription = null,
-                                        tint = Color.LightGray,
-                                        modifier = Modifier.size(20.dp).offset(x = 5.dp)
-                                    ) 
-                                },
-                                trailingIcon = {
-                                    if (state.searchQuery.isNotEmpty()) {
-                                        IconButton(onClick = { onEvent(AttendanceEvent.SearchQueryChanged("")) }) {
-                                            Icon(
-                                                Icons.Default.Close, 
-                                                contentDescription = "Clear",
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                    }
-                                },
-                                singleLine = true,
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    disabledContainerColor = Color.Transparent,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    cursorColor = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
-                                ),
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Medium
-                                )
-                            )
-                        }
-                    }
-                }
-
-                // Student list - Simple Rows without Cards
-                if (filteredStudents.isEmpty() && !state.isLoading) {
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { onEvent(AttendanceEvent.Refresh) },
+            state = pullToRefreshState,
+            modifier = Modifier.weight(1f),
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = pullToRefreshState,
+                    isRefreshing = state.isRefreshing,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    color = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
+                )
+            }
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState
+                ) {
+                    // Search Bar
                     item {
-                        Box(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 48.dp),
-                            contentAlignment = Alignment.Center
+                                .padding(horizontal = 20.dp, vertical = 15.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = if (state.searchQuery.isBlank())
-                                    "No students found in this class." +
-                                            "\nAdd students to start taking attendance!"
-                                else
-                                    "No students match your search.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(horizontal = 32.dp)
+                            // Search Bar
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(24.dp),
+                                color = if (isDark) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) else Color(0xFFF2F4F7),
+                                tonalElevation = 2.dp,
+                                border = if (isDark) 
+                                    androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)) 
+                                else 
+                                    androidx.compose.foundation.BorderStroke(1.dp, Color.Black.copy(alpha = 0.1f))
+                            ) {
+                                TextField(
+                                    value = state.searchQuery,
+                                    onValueChange = { onEvent(AttendanceEvent.SearchQueryChanged(it)) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = { 
+                                        Text(
+                                            "Search student...",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                        ) 
+                                    },
+                                    leadingIcon = { 
+                                        Icon(
+                                            Icons.Default.Search, 
+                                            contentDescription = null,
+                                            tint = Color.LightGray,
+                                            modifier = Modifier.size(20.dp).offset(x = 5.dp)
+                                        ) 
+                                    },
+                                    trailingIcon = {
+                                        if (state.searchQuery.isNotEmpty()) {
+                                            IconButton(onClick = { onEvent(AttendanceEvent.SearchQueryChanged("")) }) {
+                                                Icon(
+                                                    Icons.Default.Close, 
+                                                    contentDescription = "Clear",
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                        }
+                                    },
+                                    singleLine = true,
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                        disabledContainerColor = Color.Transparent,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        cursorColor = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
+                                    ),
+                                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    // Student list - Simple Rows without Cards
+                    if (filteredStudents.isEmpty() && !state.isLoading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 48.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (state.searchQuery.isBlank())
+                                        "No students found in this class." +
+                                                "\nAdd students to start taking attendance!"
+                                    else
+                                        "No students match your search.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 32.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        items(filteredStudents, key = { it.student.id }) { studentState ->
+                            AttendanceStudentRow(
+                                studentState = studentState,
+                                avatarColor = getAvatarColor(studentState.student.fullName),
+                                onToggle = { status ->
+                                    onEvent(AttendanceEvent.ToggleStatus(studentState.student.id, status))
+                                }
                             )
                         }
                     }
-                } else {
-                    items(filteredStudents, key = { it.student.id }) { studentState ->
-                        AttendanceStudentRow(
-                            studentState = studentState,
-                            avatarColor = getAvatarColor(studentState.student.fullName),
-                            onToggle = { status ->
-                                onEvent(AttendanceEvent.ToggleStatus(studentState.student.id, status))
-                            }
-                        )
-                    }
+                }
+
+                VerticalScrollbar(
+                    lazyListState = listState,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                )
+
+                if (showLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
+                    )
                 }
             }
-
-            VerticalScrollbar(
-                lazyListState = listState,
-                modifier = Modifier.align(Alignment.CenterEnd)
-            )
         }
     }
 }
@@ -300,7 +341,7 @@ private fun AttendanceStudentRow(
 @Composable
 fun TakeAttendancePreviewLight() {
     AttendanceTheme(darkTheme = false) {
-        AttendanceContent(
+                        AttendanceContent(
             state = AttendanceState(
                 selectedClass = ClassModel(id = 1, name = "Software Engineering", section = "6C1"),
                 students = listOf(
@@ -325,6 +366,7 @@ fun TakeAttendancePreviewLight() {
                 absentCount = 1,
                 isLoading = false
             ),
+            showLoading = false,
             onEvent = {}
         )
     }
@@ -351,6 +393,7 @@ fun TakeAttendancePreviewDark() {
                 absentCount = 1,
                 isLoading = false
             ),
+            showLoading = false,
             onEvent = {}
         )
     }

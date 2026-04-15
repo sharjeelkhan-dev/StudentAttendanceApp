@@ -24,6 +24,7 @@ data class StudentDetailState(
     val weeklyStudentData: List<Float> = listOf(0f, 0f, 0f, 0f),
     val weeklyClassAvgData: List<Float> = listOf(0f, 0f, 0f, 0f),
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val error: String? = null
 )
 
@@ -45,9 +46,17 @@ open class StudentDetailViewModel @Inject constructor(
         loadStudentDetails()
     }
 
-    private fun loadStudentDetails() {
+    fun refresh() {
+        loadStudentDetails(isRefreshing = true)
+    }
+
+    private fun loadStudentDetails(isRefreshing: Boolean = false) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            if (isRefreshing) {
+                _state.update { it.copy(isRefreshing = true) }
+            } else {
+                _state.update { it.copy(isLoading = true) }
+            }
             try {
                 val student = studentRepository.getStudentById(studentId)
                 val classModel = classRepository.getClassById(classId)
@@ -59,13 +68,13 @@ open class StudentDetailViewModel @Inject constructor(
                     val percentage = studentRepository.getAttendancePercentage(studentId, classId)
                     
                     attendanceRepository.getAttendanceByStudent(studentId, classId)
-                        .collect { logs ->
+                        .first().let { logs -> // Using first() to avoid long running collection if just refreshing, or we can keep it as is if it's a flow
                             val present = logs.count { it.status == com.attendance.app.domain.model.AttendanceStatus.PRESENT }
                             val absent = logs.count { it.status == com.attendance.app.domain.model.AttendanceStatus.ABSENT }
                             
                             // Calculate real weekly data for the chart
                             val weeklyData = calculateWeeklyData(logs)
-                            val classAvgData = calculateClassAvgData() // This would ideally come from repo
+                            val classAvgData = calculateClassAvgData() 
 
                             _state.update { 
                                 it.copy(
@@ -75,15 +84,16 @@ open class StudentDetailViewModel @Inject constructor(
                                     absentCount = absent,
                                     weeklyStudentData = weeklyData,
                                     weeklyClassAvgData = classAvgData,
-                                    isLoading = false
+                                    isLoading = false,
+                                    isRefreshing = false
                                 )
                             }
                         }
                 } else {
-                    _state.update { it.copy(isLoading = false, error = "Student not found") }
+                    _state.update { it.copy(isLoading = false, isRefreshing = false, error = "Student not found") }
                 }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.localizedMessage) }
+                _state.update { it.copy(isLoading = false, isRefreshing = false, error = e.localizedMessage) }
             }
         }
     }

@@ -11,6 +11,7 @@ interface AttendanceRepository {
     fun getSessionSummary(classId: Long, date: String): Flow<SessionSummary>
     fun getRecentSessions(classId: Long, limit: Int): Flow<List<String>>
     fun getSessionDates(classId: Long): Flow<List<String>>
+    fun getAllAttendanceForClassFlow(classId: Long): Flow<List<AttendanceRecord>>
     suspend fun getAllAttendanceForClass(classId: Long): List<AttendanceRecord>
     suspend fun getAllAttendance(): List<AttendanceRecord>
 }
