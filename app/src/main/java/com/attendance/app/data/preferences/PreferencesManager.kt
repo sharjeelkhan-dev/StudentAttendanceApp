@@ -64,7 +64,13 @@ class PreferencesManager @Inject constructor(
         dataStore.edit { prefs -> prefs[BIOMETRIC_ENABLED_KEY] = enabled }
     }
 
-    suspend fun setAttendanceDate(date: String) {
-        dataStore.edit { prefs -> prefs[ATTENDANCE_DATE_KEY] = date }
+    suspend fun setAttendanceDate(date: String?) {
+        dataStore.edit { prefs -> 
+            if (date.isNullOrEmpty()) {
+                prefs.remove(ATTENDANCE_DATE_KEY)
+            } else {
+                prefs[ATTENDANCE_DATE_KEY] = date 
+            }
+        }
     }
 }

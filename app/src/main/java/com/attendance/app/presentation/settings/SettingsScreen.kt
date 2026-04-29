@@ -109,7 +109,7 @@ private fun SettingsContent(
     onToggleBiometric: (Boolean) -> Unit,
     onCreateBackup: () -> Unit,
     onRestoreBackup: () -> Unit,
-    onSetAttendanceDate: (String) -> Unit,
+    onSetAttendanceDate: (String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -311,8 +311,10 @@ private fun SettingsContent(
                     SettingsActionItem(
                         icon = Icons.Default.CalendarToday,
                         title = "Attendance Date",
-                        subtitle = if (!state.attendanceDate.isNullOrEmpty()) "Default: ${state.attendanceDate}" else "Set custom date for marking",
-                        onClick = { showDatePicker = true }
+                        subtitle = if (!state.attendanceDate.isNullOrEmpty()) "Custom Date: ${state.attendanceDate}" else "Set custom date for marking",
+                        onClick = { showDatePicker = true },
+                        trailingIcon = if (!state.attendanceDate.isNullOrEmpty()) Icons.Default.Close else null,
+                        onTrailingIconClick = { onSetAttendanceDate(null) }
                     )
 
                     SettingsActionItem(
@@ -438,6 +440,8 @@ private fun SettingsActionItem(
     iconPainter: androidx.compose.ui.graphics.painter.Painter? = null,
     title: String,
     subtitle: String,
+    trailingIcon: ImageVector? = null,
+    onTrailingIconClick: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -491,11 +495,22 @@ private fun SettingsActionItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                )
+                
+                if (trailingIcon != null && onTrailingIconClick != null) {
+                    IconButton(onClick = onTrailingIconClick) {
+                        Icon(
+                            imageVector = trailingIcon,
+                            contentDescription = "Clear",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    )
+                }
             }
         }
     }

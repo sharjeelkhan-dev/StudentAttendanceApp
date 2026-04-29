@@ -134,7 +134,7 @@ fun StandardHeader(
                 if (showSave) {
                     Surface(
                         onClick = onSaveClick,
-                        enabled = !isSaving,
+                        enabled = !isSaving && !isSaved,
                         shape = RoundedCornerShape(100),
                         color = Color.White,
                         modifier = Modifier.height(20.dp).offset(y = 6.dp)

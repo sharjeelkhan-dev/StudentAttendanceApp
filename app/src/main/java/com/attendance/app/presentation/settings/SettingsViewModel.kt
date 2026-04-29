@@ -53,7 +53,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setAttendanceDate(date: String) {
+    fun setAttendanceDate(date: String?) {
         viewModelScope.launch {
             preferencesManager.setAttendanceDate(date)
         }

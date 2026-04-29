@@ -78,7 +78,11 @@ class AttendanceViewModel @Inject constructor(
                     
                     val classModel = classRepository.getClassById(classId)
                     val students = studentRepository.getStudentsByClass(classId).first()
+                    
+                    // Always use current date as default. 
+                    // If attendanceDate is set in preferences, use it.
                     val dateStr = attendanceDate ?: LocalDate.now().toString()
+
                     val existingRecords = attendanceRepository.getAttendanceByClassAndDate(classId, dateStr).first()
 
                     val sortedStudents = students.sortedBy { it.createdAt }
@@ -96,20 +100,19 @@ class AttendanceViewModel @Inject constructor(
                         presentCount = studentStates.count { s -> s.status == AttendanceStatus.PRESENT },
                         absentCount = studentStates.count { s -> s.status == AttendanceStatus.ABSENT },
                         isLoading = false,
-                        isSaved = existingRecords.isNotEmpty(),
+                        isSaved = false, // Always start with "Save" button enabled
                         attendanceDate = dateStr
                     ))
                 }
             }
             .onEach { newState -> 
-                _state.update { 
-                    it.copy(
+                _state.update { current ->
+                    current.copy(
                         selectedClass = newState.selectedClass,
                         students = newState.students,
                         presentCount = newState.presentCount,
                         absentCount = newState.absentCount,
                         isLoading = newState.isLoading,
-                        isSaved = newState.isSaved,
                         attendanceDate = newState.attendanceDate,
                         error = newState.error
                     ) 
@@ -183,18 +186,32 @@ class AttendanceViewModel @Inject constructor(
         val classId = currentState.selectedClass?.id ?: return
         
         viewModelScope.launch {
-            val date = preferencesManager.attendanceDateFlow.first() ?: LocalDate.now().toString()
-            _state.update { it.copy(isSaving = true) }
-            val records = currentState.students.map {
-                AttendanceRecord(
-                    studentId = it.student.id,
-                    classId = classId,
-                    date = date,
-                    status = it.status
-                )
+            try {
+                val date = preferencesManager.attendanceDateFlow.first() ?: LocalDate.now().toString()
+                _state.update { it.copy(isSaving = true) }
+                
+                val records = currentState.students.map {
+                    AttendanceRecord(
+                        studentId = it.student.id,
+                        classId = classId,
+                        date = date,
+                        status = it.status
+                    )
+                }
+                
+                attendanceRepository.saveAttendance(records)
+                
+                // Show "Saved" confirmation
+                _state.update { it.copy(isSaving = false, isSaved = true) }
+                
+                // Wait for 3 seconds
+                delay(3000)
+                
+                // Revert back to "Save"
+                _state.update { it.copy(isSaved = false) }
+            } catch (e: Exception) {
+                _state.update { it.copy(isSaving = false, error = "Failed to save: ${e.message}") }
             }
-            attendanceRepository.saveAttendance(records)
-            _state.update { it.copy(isSaving = false, isSaved = true) }
         }
     }
 }
