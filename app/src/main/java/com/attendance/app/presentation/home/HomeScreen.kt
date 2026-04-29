@@ -57,7 +57,10 @@ fun HomeScreen(
     LaunchedEffect(state.message) {
         state.message?.let {
             // Show toast or snackbar
-            android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(context,
+                it,
+                android.widget
+                    .Toast.LENGTH_LONG).show()
             viewModel.clearMessage()
         }
     }
@@ -94,7 +97,9 @@ private fun HomeContent(
     val listState = rememberLazyListState()
     val pullToRefreshState = rememberPullToRefreshState()
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(modifier = modifier.fillMaxSize()
+        .background(MaterialTheme
+            .colorScheme.background)) {
         // Header (Locked at fixed position)
         StandardHeader(
             title = "$greeting 👋",
@@ -105,7 +110,6 @@ private fun HomeContent(
             showSettings = true,
             onSettingsClick = onNavigateToSettings
         )
-
         Box(modifier = Modifier.fillMaxSize().weight(1f)) {
             PullToRefreshBox(
                 isRefreshing = state.isRefreshing,
@@ -127,7 +131,8 @@ private fun HomeContent(
                     contentPadding = PaddingValues(
                         bottom = paddingValues.calculateBottomPadding() + 16.dp
                     )
-                ) {
+                )
+                {
                     // Stats Row
                     item {
                         StatsRow(
@@ -302,7 +307,9 @@ private fun QuickActionsSection(
     onImportClick: () -> Unit
 ) {
     CompositionLocalProvider(
-        LocalRippleConfiguration provides RippleConfiguration(color = Color.Gray.copy(alpha = 0.2f))
+        LocalRippleConfiguration provides
+                RippleConfiguration
+                    (color = Color.Gray.copy(alpha = 0.2f))
     ) {
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
             Text(
@@ -312,7 +319,8 @@ private fun QuickActionsSection(
                     .copy(alpha = 0.6f),
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp,
-                modifier = Modifier.padding(vertical = 14.dp, horizontal = 5.dp)
+                modifier = Modifier.padding(vertical = 14.dp,
+                    horizontal = 5.dp)
             )
 
             Row(
