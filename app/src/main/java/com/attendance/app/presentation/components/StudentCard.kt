@@ -165,13 +165,14 @@ fun StudentAttendanceItem(
     }
 
     LinearProgressIndicator(
-        progress = { (attendancePercentage / 100f).toFloat() },
+        progress = {(attendancePercentage / 100f).toFloat()},
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .height(4.dp)
             .clip(CircleShape),
         color = progressColor,
+        drawStopIndicator = {},
         trackColor = progressColor.copy(alpha = 0.1f),
     )
 }

@@ -149,7 +149,8 @@ fun SessionCard(
                     .clip(CircleShape),
                 color = accentColor,
                 trackColor = accentColor.copy(alpha = 0.1f),
-                strokeCap = StrokeCap.Round
+                strokeCap = StrokeCap.Round,
+                drawStopIndicator = {},
             )
 
             Spacer(modifier = Modifier.height(20.dp))

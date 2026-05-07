@@ -103,7 +103,9 @@ private fun StudentsContent(
     val listState = rememberLazyListState()
     val pullToRefreshState = rememberPullToRefreshState()
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(modifier = modifier.fillMaxSize()
+        .background(MaterialTheme
+            .colorScheme.background)){
         StandardHeader(
             title = "Students",
             subtitle = state.selectedClass?.let {
@@ -250,8 +252,7 @@ private fun StudentsContent(
                                 onEvent(StudentsEvent.CancelEdit)
                             else
                                 onEvent(StudentsEvent.ToggleAddForm)
-                        }
-                    )
+                        })
                 }
             }
         }
