@@ -53,6 +53,9 @@ interface AttendanceDao {
     @Query("DELETE FROM attendance WHERE classId = :classId AND date = :date")
     suspend fun deleteAttendanceByClassAndDate(classId: Long, date: String)
 
+    @Query("DELETE FROM attendance WHERE classId = :classId AND studentId = :studentId AND date = :date")
+    suspend fun deleteSpecificAttendance(classId: Long, studentId: Long, date: String)
+
     @Query("""
         SELECT DISTINCT date FROM attendance 
         WHERE classId = :classId 

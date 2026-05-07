@@ -12,14 +12,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.attendance.app.data.preferences.PreferencesManager
 import com.attendance.app.presentation.navigation.AppNavigation
 import com.attendance.app.presentation.theme.AttendanceTheme
-import com.attendance.app.presentation.auth.AuthScreen
+import com.attendance.app.presentation.auth.ui.AuthScreen
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
@@ -27,7 +25,14 @@ class MainActivity : FragmentActivity() {
     @Inject
     lateinit var preferencesManager: PreferencesManager
 
+    @Inject
+    lateinit var authRepository: com.attendance.app.domain.repository.AuthRepository
+
+    @Inject
+    lateinit var syncRepository: com.attendance.app.domain.repository.SyncRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         
         // Enable edge-to-edge support
@@ -38,10 +43,11 @@ class MainActivity : FragmentActivity() {
             val isBiometricEnabled by preferencesManager.biometricEnabledFlow.collectAsStateWithLifecycle(initialValue = false)
             
             var isAuthenticated by remember { mutableStateOf(false) }
+            var isSplashFinished by remember { mutableStateOf(false) }
 
             // Trigger biometric prompt when enabled and not authenticated
-            LaunchedEffect(isBiometricEnabled, isAuthenticated) {
-                if (isBiometricEnabled && !isAuthenticated) {
+            LaunchedEffect(isBiometricEnabled, isAuthenticated, isSplashFinished) {
+                if (isSplashFinished && isBiometricEnabled && !isAuthenticated) {
                     promptBiometricAuth(
                         onSuccess = { isAuthenticated = true }
                     )
@@ -50,14 +56,18 @@ class MainActivity : FragmentActivity() {
 
             AttendanceTheme(darkTheme = isDarkMode) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    if (isBiometricEnabled && !isAuthenticated) {
+                    if (isSplashFinished && isBiometricEnabled && !isAuthenticated) {
                         AuthScreen(
                             onUnlockClick = {
                                 promptBiometricAuth(onSuccess = { isAuthenticated = true })
                             }
                         )
                     } else {
-                        AppNavigation()
+                        AppNavigation(
+                            authRepository = authRepository,
+                            syncRepository = syncRepository,
+                            onSplashFinished = { isSplashFinished = true }
+                        )
                     }
                 }
             }

@@ -36,7 +36,7 @@ data class HomeState(
 
 data class SessionWithStudents(
     val summary: SessionSummary,
-    val students: List<Pair<String, Boolean>> // fullName to isPresent
+    val students: List<Pair<String, Boolean>>
 )
 
 @HiltViewModel
@@ -57,14 +57,7 @@ class HomeViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true) }
-            // Trigger a re-observation or just a refresh of the data
-            // Since observeHomeData is already active and collecting from flows,
-            // we might need a way to force a refresh if the underlying data doesn't change
-            // but the user wants to pull to refresh.
-            // For now, let's just simulate it by resetting the state slightly or 
-            // if the flows are from Room, they should update automatically.
-            // If we want to show the indicator, we manually toggle it.
-            kotlinx.coroutines.delay(1000) // Simulate network/db delay
+            kotlinx.coroutines.delay(1000)
             _state.update { it.copy(isRefreshing = false) }
         }
     }

@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class ClassEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val name: String,
-    val section: String,
+    val name: String = "",
+    val section: String = "",
     val createdAt: Long = System.currentTimeMillis()
 )

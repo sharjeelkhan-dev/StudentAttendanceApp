@@ -20,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.compose.ui.graphics.toArgb
 import com.attendance.app.presentation.attendance.TakeAttendanceScreen
+import com.attendance.app.presentation.auth.ui.LoginScreen
 import com.attendance.app.presentation.classes.ClassesScreen
 import com.attendance.app.presentation.components.BottomNavBar
 import com.attendance.app.presentation.home.HomeScreen
@@ -31,13 +32,38 @@ import com.attendance.app.presentation.students.StudentsScreen
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
+import com.attendance.app.domain.repository.AuthRepository
+import com.attendance.app.domain.repository.SyncRepository
+import kotlinx.coroutines.flow.collect
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    authRepository: AuthRepository,
+    syncRepository: SyncRepository? = null,
+    onSplashFinished: () -> Unit = {}
+) {
     val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val navBackStackEntry = navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry.value?.destination?.route
+    
+    val isSignedIn by authRepository.authStateFlow().collectAsState(initial = authRepository.isUserSignedIn)
+
+    // Handle session expiry or sign out
+    LaunchedEffect(isSignedIn) {
+        if (!isSignedIn && currentRoute != null && currentRoute != Screen.Splash.route && currentRoute != Screen.Login.route) {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
+    // Start observing Cloud changes (Firestore to Room sync)
+    LaunchedEffect(isSignedIn) {
+        if (isSignedIn) {
+            syncRepository?.observeCloudChanges()?.collect()
+        }
+    }
 
     val showBottomBar by remember(currentRoute) {
         derivedStateOf {
@@ -112,8 +138,20 @@ fun AppNavigation() {
                 composable(Screen.Splash.route) {
                     SplashScreen(
                         onSplashComplete = {
-                            navController.navigate(Screen.Home.route) {
+                            onSplashFinished()
+                            val nextScreen = if (authRepository.isUserSignedIn) Screen.Home.route else Screen.Login.route
+                            navController.navigate(nextScreen) {
                                 popUpTo(Screen.Splash.route) { inclusive = true }
+                            }
+                        }
+                    )
+                }
+
+                composable(Screen.Login.route) {
+                    LoginScreen(
+                        onLoginSuccess = {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
                             }
                         }
                     )

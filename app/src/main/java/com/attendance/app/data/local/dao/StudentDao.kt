@@ -10,17 +10,26 @@ interface StudentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStudent(student: StudentEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllStudents(students: List<StudentEntity>)
+
     @Update
     suspend fun updateStudent(student: StudentEntity)
 
     @Delete
     suspend fun deleteStudent(student: StudentEntity)
 
+    @Query("DELETE FROM students WHERE id = :studentId")
+    suspend fun deleteStudentById(studentId: Long)
+
     @Query("SELECT * FROM students WHERE classId = :classId ORDER BY rollNumber ASC")
     fun getStudentsByClass(classId: Long): Flow<List<StudentEntity>>
 
     @Query("SELECT * FROM students WHERE id = :studentId")
     suspend fun getStudentById(studentId: Long): StudentEntity?
+
+    @Query("SELECT * FROM students")
+    suspend fun getAllStudentsOnce(): List<StudentEntity>
 
     @Query("SELECT COUNT(*) FROM students WHERE classId = :classId")
     fun getStudentCountByClass(classId: Long): Flow<Int>

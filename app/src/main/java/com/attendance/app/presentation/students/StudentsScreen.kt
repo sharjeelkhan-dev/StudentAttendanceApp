@@ -360,7 +360,8 @@ private fun AddStudentForm(
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalSharedTransitionApi::class,
+    ExperimentalMaterial3Api::class)
 @Composable
 private fun StudentRow(
     initials: String,

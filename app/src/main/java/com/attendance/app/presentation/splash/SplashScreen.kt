@@ -30,7 +30,8 @@ fun SplashScreen(
     var startAnimation by remember { mutableStateOf(false) }
     val scale = animateFloatAsState(
         targetValue = if (startAnimation) 1f else 0.5f,
-        animationSpec = tween(800, easing = FastOutSlowInEasing),
+        animationSpec = tween(800,
+            easing = FastOutSlowInEasing),
         label = "scale"
     )
     val alpha = animateFloatAsState(
@@ -39,7 +40,6 @@ fun SplashScreen(
             easing = LinearEasing),
         label = "alpha"
     )
-
     LaunchedEffect(Unit) {
         startAnimation = true
         delay(2000)

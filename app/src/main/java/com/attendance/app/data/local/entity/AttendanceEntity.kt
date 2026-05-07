@@ -31,8 +31,8 @@ import androidx.room.PrimaryKey
 data class AttendanceEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val studentId: Long,
-    val classId: Long,
-    val date: String, // yyyy-MM-dd format
-    val status: String // PRESENT, ABSENT, LATE
+    val studentId: Long = 0,
+    val classId: Long = 0,
+    val date: String = "", // yyyy-MM-dd format
+    val status: String = "" // PRESENT, ABSENT, LATE
 )

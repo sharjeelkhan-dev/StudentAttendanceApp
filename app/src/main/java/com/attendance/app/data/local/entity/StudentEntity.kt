@@ -20,8 +20,8 @@ import androidx.room.PrimaryKey
 data class StudentEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val fullName: String,
-    val rollNumber: String,
-    val classId: Long,
+    val fullName: String = "",
+    val rollNumber: String = "",
+    val classId: Long = 0,
     val createdAt: Long = System.currentTimeMillis()
 )

@@ -92,6 +92,7 @@ fun SettingsScreen(
             onCreateBackup = viewModel::createBackup,
             onRestoreBackup = viewModel::restoreBackup,
             onSetAttendanceDate = viewModel::setAttendanceDate,
+            onSignOut = viewModel::signOut,
             modifier = Modifier
                 .padding(bottom = paddingValues
                     .calculateBottomPadding())
@@ -110,6 +111,7 @@ private fun SettingsContent(
     onCreateBackup: () -> Unit,
     onRestoreBackup: () -> Unit,
     onSetAttendanceDate: (String?) -> Unit,
+    onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -319,15 +321,26 @@ private fun SettingsContent(
 
                     SettingsActionItem(
                         iconPainter = painterResource(id = R.drawable.cloud_backup_icon),
-                        title = "Create Backup",
-                        subtitle = "Export data as backup file",
+                        title = "Cloud Backup",
+                        subtitle = "Upload your data to Firebase Cloud",
                         onClick = onCreateBackup
                     )
                     SettingsActionItem(
                         iconPainter = painterResource(id = R.drawable.reload_sync_icon),
-                        title = "Restore Data",
-                        subtitle = "Import from backup file",
+                        title = "Sync from Cloud",
+                        subtitle = "Download data from your account",
                         onClick = onRestoreBackup
+                    )
+                }
+
+                // Account
+                item {
+                    SettingsSectionHeader("ACCOUNT")
+                    SettingsActionItem(
+                        iconPainter = painterResource(id = R.drawable.logout_icon),
+                        title = "Sign Out",
+                        subtitle = state.userEmail ?: "Sign out of your account",
+                        onClick = onSignOut
                     )
                 }
             }
@@ -532,7 +545,8 @@ fun SettingsPreview() {
             onToggleBiometric = {},
             onCreateBackup = {},
             onRestoreBackup = {},
-            onSetAttendanceDate = {}
+            onSetAttendanceDate = {},
+            onSignOut = {}
         )
     }
 }

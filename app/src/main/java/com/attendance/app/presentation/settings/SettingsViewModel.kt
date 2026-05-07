@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.*
 import com.attendance.app.data.preferences.PreferencesManager
 import com.attendance.app.data.worker.AttendanceReminderWorker
+import com.attendance.app.domain.repository.AuthRepository
+import com.attendance.app.domain.repository.SyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -18,12 +20,15 @@ data class SettingsState(
     val isNotificationsEnabled: Boolean = false,
     val isBiometricEnabled: Boolean = false,
     val attendanceDate: String? = null,
-    val backupMessage: String? = null
+    val backupMessage: String? = null,
+    val userEmail: String? = null
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
+    private val authRepository: AuthRepository,
+    private val syncRepository: SyncRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -31,6 +36,7 @@ class SettingsViewModel @Inject constructor(
     val state: StateFlow<SettingsState> = _state.asStateFlow()
 
     init {
+        _state.update { it.copy(userEmail = authRepository.currentUserEmail) }
         viewModelScope.launch {
             preferencesManager.darkModeFlow.collect { dark ->
                 _state.update { it.copy(isDarkMode = dark) }
@@ -98,11 +104,29 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun createBackup() {
-        _state.update { it.copy(backupMessage = "Backup created successfully!") }
+        viewModelScope.launch {
+            _state.update { it.copy(backupMessage = "Uploading to Cloud...") }
+            syncRepository.uploadDataToCloud().fold(
+                onSuccess = { _state.update { it.copy(backupMessage = "Cloud Backup successful!") } },
+                onFailure = { e -> _state.update { it.copy(backupMessage = "Cloud Backup failed: ${e.message}") } }
+            )
+        }
     }
 
     fun restoreBackup() {
-        _state.update { it.copy(backupMessage = "Restore completed successfully!") }
+        viewModelScope.launch {
+            _state.update { it.copy(backupMessage = "Downloading from Cloud...") }
+            syncRepository.downloadDataFromCloud().fold(
+                onSuccess = { _state.update { it.copy(backupMessage = "Cloud Restore successful!") } },
+                onFailure = { e -> _state.update { it.copy(backupMessage = "Cloud Restore failed: ${e.message}") } }
+            )
+        }
+    }
+
+    fun signOut() {
+        viewModelScope.launch {
+            authRepository.signOut()
+        }
     }
 
     fun clearBackupMessage() {
