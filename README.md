@@ -37,23 +37,10 @@ The project follows a modularized clean architecture pattern:
 *   **Domain Layer**: Contains business logic, models, and repository interfaces (Pure Kotlin).
 *   **Presentation Layer**: UI logic using ViewModels and Compose screens.
 
-## ⚙️ Setup & Installation
-
 ### Prerequisites
 *   Android Studio Ladybug or newer.
 *   JDK 17 or higher.
 *   A Firebase Project.
-
-### Steps
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/yourusername/Student-Attendance-App.git
-    ```
-2.  **Firebase Configuration**:
-    *   Create a new project in the [Firebase Console](https://console.firebase.google.com/).
-    *   Add an Android app with the package name `com.attendance.app`.
-    *   Download the `google-services.json` file and place it in the `app/` directory.
-    *   Enable **Email/Password Authentication** and **Cloud Firestore**.
     
 3.  **Build & Run**:
     *   Open the project in Android Studio.
