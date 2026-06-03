@@ -34,7 +34,7 @@ fun SessionCard(
 ) {
     val parsedDate = try {
         LocalDate.parse(date)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         LocalDate.now()
     }
 
@@ -68,7 +68,6 @@ fun SessionCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Dot
                 Box(
                     modifier = Modifier
                         .size(10.dp)
@@ -78,7 +77,6 @@ fun SessionCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Date
                 Text(
                     text = displayMonthDay,
                     style = MaterialTheme.typography.titleMedium,
@@ -94,7 +92,6 @@ fun SessionCard(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Status Badge
                 Surface(
                     color = accentColor.copy(alpha = 0.12f),
                     shape = RoundedCornerShape(8.dp)
@@ -110,7 +107,6 @@ fun SessionCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Circular Progress
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.size(44.dp)) {
                     CircularProgressIndicator(
                         progress = { percentage / 100f },
@@ -129,9 +125,8 @@ fun SessionCard(
                 }
             }
 
-            // Attendance text
             Text(
-                text = "$presentCount present  ·  $absentCount absent",
+                text = "$presentCount present  \u2022  $absentCount absent",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 modifier = Modifier.padding(start = 22.dp)
@@ -139,7 +134,6 @@ fun SessionCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Linear Progress
             LinearProgressIndicator(
                 progress = { percentage / 100f },
                 modifier = Modifier
@@ -156,7 +150,6 @@ fun SessionCard(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Bottom row: Avatars
             Row(
                 modifier = Modifier.fillMaxWidth().padding(start = 22.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -168,7 +161,6 @@ fun SessionCard(
                     val namesToShow = if (sortedNames.isNotEmpty()) {
                         sortedNames.take(6)
                     } else {
-                        // Fallback dummy data
                         listOf(
                             "Aisha Khan" to true,
                             "Bilal Ahmed" to true,
@@ -291,9 +283,8 @@ fun SessionsSummaryCard(
                     modifier = Modifier.offset(x = (-10).dp),
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    // Show last 5 percentages as bars
                     val displayPercentages = if (recentPercentages.isEmpty()) {
-                        listOf(45, 80, 65, 90, 85) // Placeholder if no data
+                        listOf(45, 80, 65, 90, 85)
                     } else {
                         recentPercentages.takeLast(5).let { list ->
                             if (list.size < 5) {
@@ -303,9 +294,9 @@ fun SessionsSummaryCard(
                     }
 
                     displayPercentages.forEach { pct ->
-                        val barHeight = (8 + (pct * 0.18)).dp // Scale height based on percentage
+                        val barHeight = (8 + (pct * 0.18)).dp
                         val color = when {
-                            pct >= 80 -> Color(0xFF00BFA5) // PresentGreen/Teal
+                            pct >= 80 -> Color(0xFF00BFA5)
                             pct >= 50 -> LateOrange
                             else -> AbsentRed
                         }

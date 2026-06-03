@@ -42,7 +42,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryGreen, // Original Primary Green
+    primary = PrimaryGreen,
     onPrimary = Color.White,
     primaryContainer = PrimaryGreenDark,
     onPrimaryContainer = Color.White,
@@ -83,7 +83,6 @@ fun AttendanceTheme(
             insetsController.isAppearanceLightStatusBars = !darkTheme
             insetsController.isAppearanceLightNavigationBars = !darkTheme
             
-            // Allow content to be drawn under system bars
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
     }

@@ -131,8 +131,6 @@ class HomeViewModel @Inject constructor(
                             val todaySessions = sessions.filter { it.summary.date == today }
                             val currentStudentsCount = students.size
                             
-                            // Show ONLY the single most recent session from TODAY.
-                            // If no session has been taken today, the list will be empty.
                             val recentSessionForToday = todaySessions.sortedByDescending { it.summary.date }
                                 .take(1)
                             
@@ -168,12 +166,8 @@ class HomeViewModel @Inject constructor(
                 val workbook = WorkbookFactory.create(inputStream)
                 val sheet = workbook.getSheetAt(0)
                 
-                // Assume Header Row 0
-                // Column 0: Class Name, Column 1: Section, Column 2: Date (YYYY-MM-DD), 
-                // Column 3: Roll No, Column 4: Student Name, Column 5: Status (P/A)
-                
                 val recordsToSave = mutableListOf<AttendanceRecord>()
-                val classCache = mutableMapOf<String, Long>() // "Name-Section" to ID
+                val classCache = mutableMapOf<String, Long>()
                 
 
                 classRepository.getAllClasses().first().forEach { 
@@ -191,7 +185,6 @@ class HomeViewModel @Inject constructor(
                     
                     if (className.isEmpty() || rollNo.isEmpty() || fullName.isEmpty()) continue
 
-                    // 1. Resolve Class
                     val classKey = "$className-$section".lowercase()
                     val classId = if (classCache.containsKey(classKey)) {
                         classCache[classKey]!!
@@ -201,7 +194,6 @@ class HomeViewModel @Inject constructor(
                         newId
                     }
 
-                    // 2. Resolve/Update Student
                     val currentStudents = studentRepository.getStudentsByClass(classId).first()
                     var student = currentStudents.find { it.rollNumber == rollNo }
                     
@@ -216,9 +208,7 @@ class HomeViewModel @Inject constructor(
                         student = updatedStudent
                     }
 
-                    // 3. Resolve Date
                     val dateStr = try {
-                        // Check if it's a numeric date (Excel internal)
                         if (row.getCell(2)?.cellType == org.apache.poi.ss.usermodel.CellType.NUMERIC) {
                             val date = row.getCell(2).dateCellValue
                             date.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString()

@@ -32,17 +32,14 @@ class SyncRepositoryImpl @Inject constructor(
             val batch = firestore.batch()
             val userDoc = firestore.collection("users").document(userId)
 
-            // 1. Sync Classes
             val classes = classDao.getAllClassesOnce()
             classes.forEach { classEntity ->
                 val classRef = userDoc.collection("classes").document(classEntity.id.toString())
                 batch.set(classRef, classEntity, SetOptions.merge())
             }
 
-            // 2. Sync Students
             val students = studentDao.getAllStudentsOnce()
             students.forEach { studentEntity ->
-                // Calculate percentage before uploading
                 val percentage = studentDao.getAttendancePercentage(studentEntity.id, studentEntity.classId)
                 
                 val studentData = mapOf(
@@ -50,7 +47,7 @@ class SyncRepositoryImpl @Inject constructor(
                     "fullName" to studentEntity.fullName,
                     "rollNumber" to studentEntity.rollNumber,
                     "classId" to studentEntity.classId,
-                    "enrollmentDate" to studentEntity.createdAt, // createdAt represents enrollment
+                    "enrollmentDate" to studentEntity.createdAt,
                     "attendancePercentage" to percentage
                 )
                 
@@ -58,7 +55,6 @@ class SyncRepositoryImpl @Inject constructor(
                 batch.set(studentRef, studentData, SetOptions.merge())
             }
 
-            // 3. Sync Attendance
             val attendance = attendanceDao.getAllAttendance()
             attendance.forEach { attendanceEntity ->
                 val attendanceId = "${attendanceEntity.classId}_${attendanceEntity.studentId}_${attendanceEntity.date}"
@@ -79,17 +75,14 @@ class SyncRepositoryImpl @Inject constructor(
         return try {
             val userDoc = firestore.collection("users").document(userId)
 
-            // 1. Download Classes
             val classesSnapshot = userDoc.collection("classes").get().await()
             val classes = classesSnapshot.toObjects(com.attendance.app.data.local.entity.ClassEntity::class.java)
             classes.forEach { classDao.insertClass(it) }
 
-            // 2. Download Students
             val studentsSnapshot = userDoc.collection("students").get().await()
             val students = studentsSnapshot.toObjects(com.attendance.app.data.local.entity.StudentEntity::class.java)
             studentDao.insertAllStudents(students)
 
-            // 3. Download Attendance
             val attendanceSnapshot = userDoc.collection("attendance").get().await()
             val attendance = attendanceSnapshot.toObjects(com.attendance.app.data.local.entity.AttendanceEntity::class.java)
             attendanceDao.insertAllAttendance(attendance)
@@ -109,7 +102,6 @@ class SyncRepositoryImpl @Inject constructor(
 
         val userDoc = firestore.collection("users").document(userId)
 
-        // Listen for Classes changes
         val classesListener = userDoc.collection("classes").addSnapshotListener { snapshot, _ ->
             snapshot?.documentChanges?.forEach { change ->
                 val classObj = change.document.toObject(com.attendance.app.data.local.entity.ClassEntity::class.java)
@@ -123,7 +115,6 @@ class SyncRepositoryImpl @Inject constructor(
             }
         }
 
-        // Listen for Students changes
         val studentsListener = userDoc.collection("students").addSnapshotListener { snapshot, _ ->
             snapshot?.documentChanges?.forEach { change ->
                 val studentObj = change.document.toObject(com.attendance.app.data.local.entity.StudentEntity::class.java)
@@ -137,7 +128,6 @@ class SyncRepositoryImpl @Inject constructor(
             }
         }
 
-        // Listen for Attendance changes
         val attendanceListener = userDoc.collection("attendance").addSnapshotListener { snapshot, _ ->
             snapshot?.documentChanges?.forEach { change ->
                 val attendanceObj = change.document.toObject(com.attendance.app.data.local.entity.AttendanceEntity::class.java)

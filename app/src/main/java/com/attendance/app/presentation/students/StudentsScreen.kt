@@ -132,10 +132,9 @@ private fun StudentsContent(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
-                    bottom = paddingValues.calculateBottomPadding() + 80.dp // Extra padding for FAB
+                    bottom = paddingValues.calculateBottomPadding() + 80.dp
                 )
             ) {
-                // Enrolled count
                 if (state.selectedClass != null) {
                     item {
                         Text(
@@ -201,7 +200,6 @@ private fun StudentsContent(
                 )
             }
 
-            // Floating Action Button at Bottom Right
             if (state.selectedClass != null) {
                 val primaryColor = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
                 FloatingActionButton(
@@ -212,18 +210,21 @@ private fun StudentsContent(
                     containerColor = primaryColor,
                     contentColor = Color.White,
                     shape = CircleShape,
-                    elevation = FloatingActionButtonDefaults.elevation(8.dp)
+                    elevation = FloatingActionButtonDefaults
+                        .elevation(8.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Student", modifier = Modifier.size(28.dp))
+                    Icon(Icons.Default.Add,
+                        contentDescription = "Add Student",
+                        modifier = Modifier.size(28.dp))
                 }
             }
         }
         
-        // Pop-up Add Form
         if (state.isAddFormVisible) {
             Dialog(
                 onDismissRequest = { 
-                    if (state.editingStudent != null) onEvent(StudentsEvent.CancelEdit)
+                    if (state.editingStudent != null)
+                        onEvent(StudentsEvent.CancelEdit)
                     else onEvent(StudentsEvent.ToggleAddForm)
                 }
             ) {
@@ -394,7 +395,6 @@ private fun StudentRow(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Avatar
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -428,7 +428,7 @@ private fun StudentRow(
                         )
 
                         Text(
-                            text = " • ",
+                            text = " \u2022 ",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                         )
@@ -450,7 +450,6 @@ private fun StudentRow(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Edit
                 IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
                     Icon(
                         painter = painterResource(id = R.drawable.pencil_circle),
@@ -459,7 +458,6 @@ private fun StudentRow(
                         modifier = Modifier.size(24.dp)
                     )
                 }
-                // Delete
                 IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
                     Icon(
                         painter = painterResource(id = R.drawable.recycle_bin_icon),
@@ -480,7 +478,6 @@ private fun StudentRow(
 fun StudentsScreenPreview() {
     AttendanceTheme {
         SharedTransitionLayout {
-            // Changed '_' to 'isVisible' to acknowledge the state
             AnimatedContent(targetState = true, label = "students_preview") { isVisible ->
                 if (isVisible) {
                     StudentsContent(
@@ -509,7 +506,6 @@ fun StudentsScreenPreview() {
                         ),
                         showLoading = false,
                         onStudentClick = { _, _ -> },
-                        // 'this' correctly provides the AnimatedVisibilityScope
                         onEvent = {}
                     )
                 }
@@ -524,7 +520,6 @@ fun StudentsScreenPreview() {
 fun StudentsScreenEmptyPreview() {
     AttendanceTheme {
         SharedTransitionLayout {
-            // Changed '_' to 'isVisible' (or any name) to acknowledge the target state
             AnimatedContent(targetState = true, label = "students_empty_preview") { isVisible ->
                 if (isVisible) {
                     StudentsContent(
@@ -540,7 +535,6 @@ fun StudentsScreenEmptyPreview() {
                         ),
                         showLoading = false,
                         onStudentClick = { _, _ -> },
-                        // 'this' refers to the AnimatedVisibilityScope provided by AnimatedContent
                         onEvent = {}
                     )
                 }
@@ -568,7 +562,6 @@ fun StudentsScreenAddFormPreview() {
                         ),
                         showLoading = false,
                         onStudentClick = { _, _ -> },
-                        // 'this' refers to the AnimatedContentScope required for shared elements
                         onEvent = {}
                     )
                 }

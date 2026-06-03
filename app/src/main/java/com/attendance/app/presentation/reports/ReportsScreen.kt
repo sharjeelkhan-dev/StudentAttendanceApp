@@ -77,10 +77,8 @@ private fun ReportsContent(
     val listState = rememberLazyListState()
     val pullToRefreshState = rememberPullToRefreshState()
 
-    // Global state for expanding all session cards at once
     var allSessionsExpanded by remember { mutableStateOf(false) }
 
-    // Pagination state (YouTube style)
     var visibleStudentsLimit by remember(state.studentReports) { mutableIntStateOf(6) }
     var visibleSessionsLimit by remember(state.sessionDetails) { mutableIntStateOf(0) }
     

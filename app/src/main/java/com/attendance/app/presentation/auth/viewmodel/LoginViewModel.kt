@@ -60,13 +60,12 @@ class LoginViewModel @Inject constructor(
             result.fold(
                 onSuccess = {
                     if (_state.value.isSignUpMode) {
-                        // For Sign Up: Sign out immediately so they can log in manually
                         authRepository.signOut()
                         _state.update { 
                             it.copy(
                                 isLoading = false, 
                                 isSignUpMode = false,
-                                password = "", // Clear password for security
+                                password = "",
                                 message = "Account created successfully! Please login."
                             ) 
                         }

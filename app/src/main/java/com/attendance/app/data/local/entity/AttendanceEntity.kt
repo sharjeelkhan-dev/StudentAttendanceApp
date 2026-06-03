@@ -33,6 +33,6 @@ data class AttendanceEntity(
     val id: Long = 0,
     val studentId: Long = 0,
     val classId: Long = 0,
-    val date: String = "", // yyyy-MM-dd format
-    val status: String = "" // PRESENT, ABSENT, LATE
+    val date: String = "",
+    val status: String = ""
 )

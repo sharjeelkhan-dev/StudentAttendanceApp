@@ -21,7 +21,8 @@ import com.attendance.app.presentation.theme.PrimaryGreen
 @Composable
 fun AuthScreen(onUnlockClick: () -> Unit) {
     val isDark = LocalIsDarkMode.current
-    val primaryColor = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
+    val primaryColor = if (isDark) MaterialTheme
+        .colorScheme.primary else PrimaryGreen
 
     Box(
         modifier = Modifier
@@ -52,7 +53,8 @@ fun AuthScreen(onUnlockClick: () -> Unit) {
                 text = "Please authenticate to open Student Attendance",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onBackground
+                    .copy(alpha = 0.7f)
             )
             Spacer(modifier = Modifier.height(48.dp))
             Button(
@@ -62,7 +64,8 @@ fun AuthScreen(onUnlockClick: () -> Unit) {
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = primaryColor,
-                    contentColor = if (isDark) MaterialTheme.colorScheme.onPrimary else Color.White
+                    contentColor = if (isDark) MaterialTheme
+                        .colorScheme.onPrimary else Color.White
                 )
             ) {
                 Icon(

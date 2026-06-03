@@ -88,11 +88,9 @@ class ReportsViewModel @Inject constructor(
                         val dates = attendanceRepository.getSessionDates(classId).first()
                         val allRecords = attendanceRepository.getAllAttendanceForClassFlow(classId).first()
 
-                        // 1. Group records by date and then by studentId for O(1) lookup
                         val recordsByDateAndStudent: Map<String, Map<Long, AttendanceRecord>> = allRecords.groupBy { it.date }
                             .mapValues { entry -> entry.value.associateBy { it.studentId } }
 
-                        // 2. Pre-calculate student creation dates
                         val studentWithDates = students.map { student ->
                             val date = try {
                                 Instant.ofEpochMilli(student.createdAt).atZone(ZoneId.systemDefault()).toLocalDate()
@@ -100,7 +98,6 @@ class ReportsViewModel @Inject constructor(
                             student to date
                         }
 
-                        // 3. Process Sessions
                         val sessionList = dates.mapNotNull { dateStr ->
                             try {
                                 val sessionDate = LocalDate.parse(dateStr)
@@ -126,7 +123,6 @@ class ReportsViewModel @Inject constructor(
 
                         val finalSessions = sessionList.map { it.first }
 
-                        // 4. Process Student Reports
                         val reports = studentWithDates.map { (student, createdDate) ->
                             var total = 0
                             var present = 0

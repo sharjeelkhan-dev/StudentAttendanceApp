@@ -56,7 +56,6 @@ fun HomeScreen(
 
     LaunchedEffect(state.message) {
         state.message?.let {
-            // Show toast or snackbar
             android.widget.Toast.makeText(context,
                 it,
                 android.widget
@@ -100,11 +99,10 @@ private fun HomeContent(
     Column(modifier = modifier.fillMaxSize()
         .background(MaterialTheme
             .colorScheme.background)) {
-        // Header (Locked at fixed position)
         StandardHeader(
             title = "$greeting 👋",
             subtitle = if (state.selectedClass?.section?.isNotEmpty() == true)
-                "${state.selectedClass.name} — ${state.selectedClass.section}"
+                "${state.selectedClass.name} \u2014 ${state.selectedClass.section}"
             else state.selectedClass?.name ?: "No Class",
             showDate = true,
             showSettings = true,
@@ -133,7 +131,6 @@ private fun HomeContent(
                     )
                 )
                 {
-                    // Stats Row
                     item {
                         StatsRow(
                             total = state.totalStudents,
@@ -141,7 +138,6 @@ private fun HomeContent(
                             absent = state.absentToday
                         )
                     }
-                    // Quick Actions
                     item {
                         QuickActionsSection(
                             onAttendanceClick = onNavigateToAttendance,
@@ -150,12 +146,11 @@ private fun HomeContent(
                             onImportClick = onImportClick
                         )
                     }
-                    // Recent Sessions Header
                     item {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 25.dp, end = 20.dp, top = 22.dp, bottom = 8.dp), // Reduced bottom padding
+                                .padding(start = 25.dp, end = 20.dp, top = 22.dp, bottom = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -171,7 +166,7 @@ private fun HomeContent(
                                 if (state.selectedClass != null) {
                                     Text(
                                         text = if (state.selectedClass.section.isNotEmpty())
-                                            "${state.selectedClass.name} — ${state.selectedClass.section}"
+                                            "${state.selectedClass.name} \u2014 ${state.selectedClass.section}"
                                         else state.selectedClass.name,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color.Gray
@@ -184,7 +179,7 @@ private fun HomeContent(
                             ) {
                                 Surface(
                                     onClick = onNavigateToReports,
-                                    shape = RoundedCornerShape(100), // Perfect Pill shape
+                                    shape = RoundedCornerShape(100),
                                     color = MaterialTheme.colorScheme.surface,
                                     shadowElevation = 8.dp
                                 ) {
@@ -207,16 +202,14 @@ private fun HomeContent(
                         }
                     }
 
-                    // Summary Card
                     item {
                         SessionsSummaryCard(
                             sessionCount = state.recentSessions.size,
                             recentPercentages = state.recentSessions.map { it.summary.percentage },
-                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp) // Removed top padding
+                            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
                         )
                     }
 
-                    // Recent Sessions List
                     if (state.recentSessions.isEmpty() && !state.isLoading) {
                         item {
                             Box(
@@ -285,13 +278,13 @@ private fun StatsRow(
             valueColor = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
         )
         StatsCard(
-            value = if (present > 0) present.toString() else "—",
+            value = if (present > 0) present.toString() else "\u2014",
             label = "Present",
             modifier = Modifier.weight(1f),
             valueColor = PresentGreen
         )
         StatsCard(
-            value = if (absent > 0) absent.toString() else "—",
+            value = if (absent > 0) absent.toString() else "\u2014",
             label = "Absent",
             modifier = Modifier.weight(1f),
             valueColor = AbsentRed
@@ -365,7 +358,7 @@ private fun QuickActionsSection(
 
 @Composable
 private fun QuickActionButton(
-    icon: Any, // ImageVector or Int resource
+    icon: Any,
     label: String,
     modifier: Modifier = Modifier,
     isHighlighted: Boolean = false,
@@ -470,7 +463,6 @@ fun RecentSessionsPreview() {
                 .background(MaterialTheme.colorScheme.background)
                 .padding(bottom = 20.dp)
         ) {
-            // Recent Sessions Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -487,7 +479,7 @@ fun RecentSessionsPreview() {
                         letterSpacing = 1.sp
                     )
                     Text(
-                        text = "Software Engineering — 6C1",
+                        text = "Software Engineering \u2014 6C1",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                     )
@@ -507,13 +499,11 @@ fun RecentSessionsPreview() {
                 }
             }
 
-            // Summary Card
             SessionsSummaryCard(
                 sessionCount = dummySessions.size,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
             )
 
-            // Recent Sessions List
             dummySessions.forEach { session ->
                 SessionCard(
                     date = session.date,

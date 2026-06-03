@@ -87,7 +87,7 @@ private fun ClassesContent(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
-                            bottom = paddingValues.calculateBottomPadding() + 80.dp // Extra padding for FAB
+                            bottom = paddingValues.calculateBottomPadding() + 80.dp
                         )
                     ) {
                         // Classes Header
