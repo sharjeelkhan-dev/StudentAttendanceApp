@@ -42,6 +42,8 @@ open class StudentDetailViewModel @Inject constructor(
     private val _state = MutableStateFlow(StudentDetailState())
     val state: StateFlow<StudentDetailState> = _state.asStateFlow()
 
+    private var attendanceJob: kotlinx.coroutines.Job? = null
+
     init {
         loadStudentDetails()
     }
@@ -55,7 +57,8 @@ open class StudentDetailViewModel @Inject constructor(
     }
 
     private fun loadStudentDetails(isRefreshing: Boolean = false) {
-        viewModelScope.launch {
+        attendanceJob?.cancel()
+        attendanceJob = viewModelScope.launch {
             if (isRefreshing) {
                 _state.update { it.copy(isRefreshing = true) }
             } else {
@@ -72,7 +75,7 @@ open class StudentDetailViewModel @Inject constructor(
                     val percentage = studentRepository.getAttendancePercentage(studentId, classId)
                     
                     attendanceRepository.getAttendanceByStudent(studentId, classId)
-                        .first().let { logs -> // Using first() to avoid long running collection if just refreshing, or we can keep it as is if it's a flow
+                        .collect { logs ->
                             val present = logs.count { it.status == com.attendance.app.domain.model.AttendanceStatus.PRESENT }
                             val absent = logs.count { it.status == com.attendance.app.domain.model.AttendanceStatus.ABSENT }
                             
@@ -80,8 +83,8 @@ open class StudentDetailViewModel @Inject constructor(
                             val weeklyData = calculateWeeklyData(logs)
                             val classAvgData = calculateClassAvgData() 
 
-                            _state.update { 
-                                it.copy(
+                            _state.update { currentState ->
+                                currentState.copy(
                                     attendanceLogs = logs.sortedByDescending { it.date },
                                     attendancePercentage = percentage,
                                     presentCount = present,

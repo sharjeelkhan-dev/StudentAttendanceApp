@@ -149,14 +149,21 @@ private fun SettingsContent(
                     text = "Settings",
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White,
-                    fontSize = 27.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 25.sp, // Kept original size
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 28.sp,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 Text(
                     text = "Manage Your Preferences",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.8f),
-                    fontSize = 14.sp
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp, // Kept original size
+                    lineHeight = 16.sp,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
         }

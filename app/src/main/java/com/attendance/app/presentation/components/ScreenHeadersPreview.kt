@@ -203,7 +203,8 @@ fun StandardHeader(
             }
         }
 
-        // Title and Subtitle with original sizes, but removed negative offsets to prevent clipping
+        // Title and Subtitle with original sizes,
+        // but removed negative offsets to prevent clipping
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
@@ -219,7 +220,7 @@ fun StandardHeader(
             style = MaterialTheme.typography.bodyMedium,
             color = secondaryContentColor,
             fontWeight = FontWeight.Medium,
-            fontSize = 14.sp, // Kept original size
+            fontSize = 14.sp,
             lineHeight = 16.sp,
             maxLines = 1,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -283,6 +284,18 @@ fun PreviewReportsHeader() {
         StandardHeader(
             title = "Attendance Report",
             subtitle = "Software Engineering — 6C1"
+        )
+    }
+}
+
+@Preview(name = "Student Detail Header")
+@Composable
+fun PreviewStudentDetailHeader() {
+    AttendanceTheme(darkTheme = false) {
+        StandardHeader(
+            title = "Student Details",
+            subtitle = "2233779",
+            onBackClick = {}
         )
     }
 }

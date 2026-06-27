@@ -54,7 +54,6 @@ fun ReportsScreen(
             showLoading = false
         }
     }
-
     ReportsContent(
         state = state,
         showLoading = showLoading,

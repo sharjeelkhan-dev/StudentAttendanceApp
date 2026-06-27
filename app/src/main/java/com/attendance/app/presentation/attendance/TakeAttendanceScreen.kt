@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -18,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -32,6 +32,7 @@ import com.attendance.app.presentation.components.StandardHeader
 import com.attendance.app.presentation.components.VerticalScrollbar
 import com.attendance.app.presentation.theme.*
 import kotlinx.coroutines.delay
+import com.attendance.app.R
 
 @Composable
 fun TakeAttendanceScreen(
@@ -150,7 +151,7 @@ private fun AttendanceContent(
                                     },
                                     leadingIcon = { 
                                         Icon(
-                                            Icons.Default.Search, 
+                                            painter = painterResource(id = R.drawable.magnifying_glass_icon),
                                             contentDescription = null,
                                             tint = Color.LightGray,
                                             modifier = Modifier.size(20.dp).offset(x = 5.dp)

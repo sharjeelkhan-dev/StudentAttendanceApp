@@ -112,7 +112,6 @@ private fun StudentsContent(
                 "${it.name} \u2014 ${it.section}"
             } ?: "No Class Selected"
         )
-
         PullToRefreshBox(
             isRefreshing = state.isRefreshing,
             onRefresh = { onEvent(StudentsEvent.Refresh) },
