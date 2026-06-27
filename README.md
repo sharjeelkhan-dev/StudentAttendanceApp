@@ -59,7 +59,12 @@ The project follows a modularized clean architecture pattern:
     *   Sync Gradle files.
     *   Click **Run** to install the app on your emulator or physical device.
 
-<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/f3baad2c-4985-4a2d-bcb4-21513fe5bccb" />
-<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/a05ecdf3-3b28-4d1d-b498-aedd85198207" />
-<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/de3de2b1-9710-4fa1-9d3e-23c6d1e5d5fd" />
-<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/28198500-a282-40a8-8177-c4bbffcc396e" />
+<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/8555f548-eada-4137-88a3-8b7df4e30d7f" />
+<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/7ddd222b-a5d6-45a9-8840-24b5343fadb8" />
+<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/1692f15c-9af5-4969-a710-3d86a33dcf28" />
+<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/1f86572b-e9a8-420d-a904-a4966bd59517" />
+<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/2b8325ed-24c7-4b11-a6ac-1d137345ec80" />
+<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/6615c639-e08e-4026-862b-65521b84675e" />
+<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/a3f722a9-51eb-4afa-8b93-9a23cd066ce4" />
+<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/043df7a1-4c58-46b7-9942-ce2ac76379a9" />
+<img width="720" height="1600" alt="image" src="https://github.com/user-attachments/assets/3f945c09-b99d-4573-8279-9720f4079384" />
