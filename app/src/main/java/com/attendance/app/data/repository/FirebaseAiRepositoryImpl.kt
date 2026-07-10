@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
 
 @Singleton
 class FirebaseAiRepositoryImpl @Inject constructor(
@@ -49,7 +50,7 @@ class FirebaseAiRepositoryImpl @Inject constructor(
 
                 if (isQuotaError && attempt < maxRetries - 1) {
                     Log.w("FirebaseAiRepo", "Quota hit (RESOURCE_EXHAUSTED). Retrying in $currentDelay ms...")
-                    delay(currentDelay)
+                    delay(currentDelay.milliseconds)
                     currentDelay *= 2 // Exponential backoff (1.5s -> 3s -> 6s)
                 } else {
                     // Critical error or last attempt exhausted, map standard exceptions safely
