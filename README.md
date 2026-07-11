@@ -43,7 +43,8 @@
 
 ### 📋 Prerequisites
 * Android Studio Ladybug (or newer)
-* JDK 17+
+* A Google Gemini API Key
+* Firebase Project setup
 * Active Firebase Console Sandbox Instance
 
 ### ⚙️ Step-by-Step Deployment
