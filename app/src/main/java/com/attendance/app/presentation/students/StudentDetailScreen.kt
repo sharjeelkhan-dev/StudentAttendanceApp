@@ -483,7 +483,7 @@ private fun StudentDetailScreenPreview() {
                     .fillMaxWidth()
                     .background(PrimaryGreenDark)
                     .statusBarsPadding()
-                    .height(70.dp)
+                    .height(80.dp)
             ) {
                 // Back Button
                 IconButton(

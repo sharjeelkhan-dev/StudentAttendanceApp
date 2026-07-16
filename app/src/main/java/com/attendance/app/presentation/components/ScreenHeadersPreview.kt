@@ -58,7 +58,7 @@ fun StandardHeader(
             .fillMaxWidth()
             .background(backgroundColor)
             .statusBarsPadding()
-            .height(70.dp) // Strictly maintained 70.dp height
+            .height(80.dp)
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.Center
     ) {
@@ -117,7 +117,6 @@ fun StandardHeader(
                     }
                 }
             }
-
             // Right side: Save / Search / Settings / Expand
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (showExpand) {
@@ -141,7 +140,7 @@ fun StandardHeader(
                         enabled = !isSaving && !isSaved,
                         shape = RoundedCornerShape(100),
                         color = Color.White,
-                        modifier = Modifier.height(20.dp).offset(y = 6.dp)
+                        modifier = Modifier.height(100.dp).offset(y = 6.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp),
@@ -174,7 +173,6 @@ fun StandardHeader(
                         }
                     }
                 }
-
                 if (showSearch) {
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
@@ -221,9 +219,6 @@ fun StandardHeader(
                 }
             }
         }
-
-        // Title and Subtitle with original sizes,
-        // but removed negative offsets to prevent clipping
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,

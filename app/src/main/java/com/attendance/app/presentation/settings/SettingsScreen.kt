@@ -34,6 +34,7 @@ import com.attendance.app.presentation.theme.AttendanceTheme
 import com.attendance.app.presentation.theme.LocalIsDarkMode
 import com.attendance.app.R
 import com.attendance.app.presentation.components.VerticalScrollbar
+import androidx.compose.ui.platform.LocalLocale
 
 @Composable
 fun SettingsScreen(
@@ -125,7 +126,7 @@ private fun SettingsContent(
                 .fillMaxWidth()
                 .background(PrimaryGreenDark)
                 .statusBarsPadding()
-                .height(70.dp)
+                .height(80.dp)
         ) {
             // Back Button
             IconButton(
@@ -145,7 +146,7 @@ private fun SettingsContent(
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 65.dp, top = 12.dp)
+                    .padding(start = 65.dp, top = 18.dp)
             ) {
                 Text(
                     text = "Settings",
@@ -275,7 +276,7 @@ private fun SettingsContent(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = selectedDate.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()).uppercase(),
+                                    text = selectedDate.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, LocalLocale.current.platformLocale).uppercase(),
                                     color = Color.White,
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Medium,
@@ -291,7 +292,7 @@ private fun SettingsContent(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = selectedDate.month.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault()).uppercase(),
+                                    text = selectedDate.month.getDisplayName(java.time.format.TextStyle.SHORT, LocalLocale.current.platformLocale).uppercase(),
                                     color = Color.White,
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold
