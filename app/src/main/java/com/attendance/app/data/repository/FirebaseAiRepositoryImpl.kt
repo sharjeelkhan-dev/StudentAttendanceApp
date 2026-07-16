@@ -25,6 +25,7 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.collections.takeLast
 import kotlin.time.Duration.Companion.milliseconds
 
 @Singleton
@@ -52,7 +53,7 @@ class FirebaseAiRepositoryImpl @Inject constructor(
         }
     }
 
-    // Helper function patterned exactly like your Smart To-Do App with exponential backoff retry
+    // Helper function with exponential backoff retry mechanism for AI requests
     private suspend fun generateContentWithRetry(prompt: String, maxRetries: Int = 3): String? = withContext(Dispatchers.IO) {
         val userApiKey = preferencesManager.aiApiKeyFlow.first()?.trim()
         var currentDelay = 1500L // 1.5 Seconds initial delay to clear brief quota window

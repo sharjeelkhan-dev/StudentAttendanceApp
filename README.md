@@ -50,4 +50,4 @@
 ### ⚙️ Step-by-Step Deployment
 1. **Initialize Local Repository**
    ```bash
-   git clone [https://github.com/sharjeelkhan111213-coder/Student-Attendance-App.git](https://github.com/sharjeelkhan111213-coder/Student-Attendance-App.git)
+   git clone [https://github.com/sharjeelkhan-dev/Student-Attendance-App.git](https://github.com/sharjeelkhan-dev/Student-Attendance-App.git)
