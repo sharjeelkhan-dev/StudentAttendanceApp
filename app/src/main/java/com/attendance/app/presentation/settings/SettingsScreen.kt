@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,14 +29,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.attendance.app.presentation.theme.PrimaryGreen
-import com.attendance.app.presentation.theme.PrimaryGreenDark
-import com.attendance.app.presentation.theme.AttendanceTheme
-import com.attendance.app.presentation.theme.LocalIsDarkMode
 import com.attendance.app.R
 import com.attendance.app.presentation.components.VerticalScrollbar
-import androidx.compose.ui.platform.LocalLocale
-import com.attendance.app.presentation.components.StandardHeader
+import com.attendance.app.presentation.theme.AttendanceTheme
+import com.attendance.app.presentation.theme.LocalIsDarkMode
+import com.attendance.app.presentation.theme.PrimaryGreen
+import com.attendance.app.presentation.theme.PrimaryGreenDark
 
 @Composable
 fun SettingsScreen(
@@ -46,7 +45,6 @@ fun SettingsScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Permission launcher for notifications (Android 13+)
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -55,7 +53,6 @@ fun SettingsScreen(
         }
     }
 
-    // Show snackbar for backup messages
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(state.backupMessage) {
         state.backupMessage?.let {
@@ -68,7 +65,7 @@ fun SettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        modifier = modifier
+        modifier = modifier.fillMaxSize()
     ) { paddingValues ->
         SettingsContent(
             state = state,
@@ -97,8 +94,8 @@ fun SettingsScreen(
             onSetAiApiKey = viewModel::setAiApiKey,
             onSignOut = viewModel::signOut,
             modifier = Modifier
-                .padding(bottom = paddingValues
-                    .calculateBottomPadding())
+                .fillMaxSize()
+                .padding(paddingValues)
         )
     }
 }
@@ -120,8 +117,11 @@ private fun SettingsContent(
 ) {
     val listState = rememberLazyListState()
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        // Custom Header Layout (Fixed at top)
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -153,7 +153,7 @@ private fun SettingsContent(
                     text = "Settings",
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White,
-                    fontSize = 25.sp, // Kept original size
+                    fontSize = 25.sp,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 28.sp,
                     maxLines = 1,
@@ -164,7 +164,7 @@ private fun SettingsContent(
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.8f),
                     fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp, // Kept original size
+                    fontSize = 14.sp,
                     lineHeight = 16.sp,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -172,13 +172,17 @@ private fun SettingsContent(
             }
         }
 
-        Box(modifier = Modifier.fillMaxWidth().fillMaxSize().weight(1f)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
                     .navigationBarsPadding(),
-                contentPadding = PaddingValues(bottom = 16.dp)
+                contentPadding = PaddingValues(bottom = 24.dp)
             ) {
                 // Appearance
                 item {
@@ -211,7 +215,7 @@ private fun SettingsContent(
                         apiKey = state.aiApiKey,
                         onKeyChange = onSetAiApiKey
                     )
-                    
+
                     SettingsSectionHeader("SECURITY")
                     SettingsToggleItem(
                         icon = Icons.Default.Fingerprint,
@@ -225,7 +229,7 @@ private fun SettingsContent(
                 // Data
                 item {
                     SettingsSectionHeader("DATA")
-                    
+
                     var showDatePicker by remember { mutableStateOf(false) }
                     if (showDatePicker) {
                         val datePickerState = rememberDatePickerState(
@@ -268,7 +272,7 @@ private fun SettingsContent(
                                     .toLocalDate()
                             } ?: java.time.LocalDate.now()
 
-                            // Custom Green Header to match the classic Android look from the image
+                            // Custom Green Header to match the classic Android look
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -372,7 +376,6 @@ private fun SettingsContent(
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsAiKeyItem(
@@ -381,7 +384,7 @@ private fun SettingsAiKeyItem(
 ) {
     val isDark = LocalIsDarkMode.current
     val primaryColor = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -407,14 +410,14 @@ private fun SettingsAiKeyItem(
                 Spacer(modifier = Modifier.width(20.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Gemini API Key", 
-                        style = MaterialTheme.typography.titleMedium, 
+                        text = "Gemini API Key",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Use your own key for Gemini 2.0 (optional)", 
-                        style = MaterialTheme.typography.bodySmall, 
+                        text = "Use your own key for Gemini 2.0 (optional)",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -468,7 +471,7 @@ private fun SettingsToggleItem(
 ) {
     val isDark = LocalIsDarkMode.current
     val primaryColor = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
-    
+
     CompositionLocalProvider(
         LocalRippleConfiguration provides RippleConfiguration(color = Color.Gray.copy(alpha = 0.2f))
     ) {
@@ -507,14 +510,14 @@ private fun SettingsToggleItem(
                 Spacer(modifier = Modifier.width(20.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = title, 
-                        style = MaterialTheme.typography.titleMedium, 
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = subtitle, 
-                        style = MaterialTheme.typography.bodySmall, 
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -545,8 +548,9 @@ private fun SettingsActionItem(
     onTrailingIconClick: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-    
+    val isDark = LocalIsDarkMode.current
+    val primaryColor = if (isDark) MaterialTheme.colorScheme.primary else PrimaryGreen
+
     CompositionLocalProvider(
         LocalRippleConfiguration provides RippleConfiguration(color = Color.Gray.copy(alpha = 0.2f))
     ) {
@@ -585,18 +589,18 @@ private fun SettingsActionItem(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = title, 
-                        style = MaterialTheme.typography.titleMedium, 
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = subtitle, 
-                        style = MaterialTheme.typography.bodySmall, 
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 if (trailingIcon != null && onTrailingIconClick != null) {
                     IconButton(onClick = onTrailingIconClick) {
                         Icon(

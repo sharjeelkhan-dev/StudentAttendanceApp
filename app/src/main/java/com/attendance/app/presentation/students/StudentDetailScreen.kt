@@ -503,7 +503,7 @@ private fun StudentDetailScreenPreview() {
                 Column(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .padding(start = 65.dp, top = 12.dp)
+                        .padding(start = 65.dp, top = 18.dp)
                 ) {
                     Text(
                         text = "Student Details",
