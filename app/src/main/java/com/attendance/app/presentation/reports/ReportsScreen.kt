@@ -36,6 +36,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun ReportsScreen(
@@ -50,7 +51,7 @@ fun ReportsScreen(
         if (state.isLoading) {
             showLoading = true
         } else {
-            delay(800)
+            delay(800.milliseconds)
             showLoading = false
         }
     }
@@ -170,7 +171,7 @@ private fun ReportsContent(
                                     strokeWidth = 2.dp
                                 )
                                 LaunchedEffect(visibleStudentsLimit) {
-                                    delay(900)
+                                    delay(900.milliseconds)
                                     visibleStudentsLimit += studentsPerPage
                                 }
                             }
@@ -297,7 +298,7 @@ private fun ReportsContent(
                                         strokeWidth = 2.dp
                                     )
                                     LaunchedEffect(visibleSessionsLimit) {
-                                        delay(1200)
+                                        delay(1200.milliseconds)
                                         visibleSessionsLimit += sessionsPerPage
                                     }
                                 }
@@ -368,9 +369,7 @@ private fun StudentReportCard(
                             style = MaterialTheme.typography
                                 .bodySmall,
                             modifier = Modifier.offset(y = (2).dp),
-                            color = MaterialTheme.
-                            colorScheme.onSurfaceVariant.
-                            copy(alpha = 0.5f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontWeight = FontWeight.Medium,
                             fontSize = 10.sp)
                     }

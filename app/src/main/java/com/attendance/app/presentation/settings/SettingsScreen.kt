@@ -35,6 +35,7 @@ import com.attendance.app.presentation.theme.LocalIsDarkMode
 import com.attendance.app.R
 import com.attendance.app.presentation.components.VerticalScrollbar
 import androidx.compose.ui.platform.LocalLocale
+import com.attendance.app.presentation.components.StandardHeader
 
 @Composable
 fun SettingsScreen(
