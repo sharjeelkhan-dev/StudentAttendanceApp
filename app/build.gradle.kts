@@ -1,5 +1,7 @@
 @file:Suppress("DEPRECATION")
 
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("com.google.devtools.ksp")
@@ -7,6 +9,13 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.gms.google-services")
 }
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+val aiApiKey = localProperties.getProperty("AI_API_KEY") ?: ""
 
 android {
     namespace = "com.attendance.app"
@@ -28,11 +37,11 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "AI_API_KEY", "\"AIzaSyAqCv41AHdy_xRNJT9JF4S47LWws5PqiPM\"")
+            buildConfigField("String", "AI_API_KEY", "\"$aiApiKey\"")
         }
         release {
             isMinifyEnabled = false
-            buildConfigField("String", "AI_API_KEY", "\"AIzaSyAqCv41AHdy_xRNJT9JF4S47LWws5PqiPM\"")
+            buildConfigField("String", "AI_API_KEY", "\"$aiApiKey\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
