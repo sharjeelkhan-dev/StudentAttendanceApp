@@ -18,21 +18,48 @@
 <table width="100%">
   <!-- Row 1 -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/7ddd222b-a5d6-45a9-8840-24b5343fadb8" width="100%" alt="Screen 1 - Dashboard" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/1692f15c-9af5-4969-a710-3d86a33dcf28" width="100%" alt="Screen 2 - Metrics" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/756269f4-5b21-4e5e-b781-c3d22fbe54d1" width="100%" alt="Screen 3 - Class Overview" /></td>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/fc72a4df-9a6e-45ab-a7ac-c18faac317f2" width="100%" alt="Screen 1 - Dashboard" />
+      <br/><b>Screen 1 - Dashboard</b>
+    </td>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/f2e18b97-82a9-4315-9b62-420242b69157" width="100%" alt="Screen 2 - Metrics" />
+      <br/><b>Screen 2 - Metrics</b>
+    </td>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/8479d56a-0e80-446c-9aae-81acad41df4a" width="100%" alt="Screen 3 - Class Overview" />
+      <br/><b>Screen 3 - Class Overview</b>
+    </td>
   </tr>
   <!-- Row 2 -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/2b8325ed-24c7-4b11-a6ac-1d137345ec80" width="100%" alt="Screen 4 - Security Check" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/6615c639-e08e-4026-862b-65521b84675e" width="100%" alt="Screen 5 - Records" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/a3f722a9-51eb-4afa-8b93-9a23cd066ce4" width="100%" alt="Screen 6 - Attendance Logs" /></td>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/9aa6c7b4-74a9-41a9-8b80-d2a636163b9d" width="100%" alt="Screen 4 - Security Check" />
+      <br/><b>Screen 4 - Security Check</b>
+    </td>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/ee45b9d6-21f0-4cce-b471-655b254c8fd9" width="100%" alt="Screen 5 - Records" />
+      <br/><b>Screen 5 - Records</b>
+    </td>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/8b906df3-f183-4915-938a-c8a09c463815" width="100%" alt="Screen 6 - Attendance Logs" />
+      <br/><b>Screen 6 - Attendance Logs</b>
+    </td>
   </tr>
   <!-- Row 3 -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/043df7a1-4c58-46b7-9942-ce2ac76379a9" width="100%" alt="Screen 7 - AI Engine Settings" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/3f945c09-b99d-4573-8279-9720f4079384" width="100%" alt="Screen 8 - Profile Report" /></td>
-    <td width="33.3%" align="center"></td>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/f7664fca-39a2-4e62-9467-309c97a11105" width="100%" alt="Screen 7 - AI Engine Settings" />
+      <br/><b>Screen 7 - AI Engine Settings</b>
+    </td>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/048fe81c-e9ae-4097-abb8-86c8c4e09183" width="100%" alt="Screen 8 - Profile Report" />
+      <br/><b>Screen 8 - Profile Report</b>
+    </td>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/2246a906-27b8-43bd-a6bb-46541d4c7d6b" width="100%" alt="Screen 9 - System Settings" />
+      <br/><b>Screen 9 - System Settings</b>
+    </td>
   </tr>
 </table>
 </details>
