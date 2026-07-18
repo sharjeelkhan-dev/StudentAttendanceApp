@@ -19,45 +19,45 @@
   <!-- Row 1 -->
   <tr>
     <td width="33.3%" align="center">
-      <img src="https://github.com/user-attachments/assets/fc72a4df-9a6e-45ab-a7ac-c18faac317f2" width="100%" alt="Screen 1 - Dashboard" />
-      <br/><b>Screen 1 - Dashboard</b>
+      <img src="https://github.com/user-attachments/assets/fc72a4df-9a6e-45ab-a7ac-c18faac317f2" width="100%" alt="Screen 1 - Splash Screen" />
+      <br/><b>Screen 1 - Splash Screen</b>
     </td>
     <td width="33.3%" align="center">
-      <img src="https://github.com/user-attachments/assets/f2e18b97-82a9-4315-9b62-420242b69157" width="100%" alt="Screen 2 - Metrics" />
-      <br/><b>Screen 2 - Metrics</b>
+      <img src="https://github.com/user-attachments/assets/337c1905-0e36-4a78-a880-851cbd182046" width="100%" alt="Screen 2 - Dashboard" />
+      <br/><b>Screen 2 - Dashboard</b>
     </td>
     <td width="33.3%" align="center">
-      <img src="https://github.com/user-attachments/assets/8479d56a-0e80-446c-9aae-81acad41df4a" width="100%" alt="Screen 3 - Class Overview" />
-      <br/><b>Screen 3 - Class Overview</b>
+      <img src="https://github.com/user-attachments/assets/5e976761-a23d-4cd3-ac87-bad122b255e8" width="100%" alt="Screen 3 - AI-Prompting" />
+      <br/><b>Screen 3 - AI-Prompting</b>
     </td>
   </tr>
   <!-- Row 2 -->
   <tr>
     <td width="33.3%" align="center">
-      <img src="https://github.com/user-attachments/assets/9aa6c7b4-74a9-41a9-8b80-d2a636163b9d" width="100%" alt="Screen 4 - Security Check" />
-      <br/><b>Screen 4 - Security Check</b>
+      <img src="https://github.com/user-attachments/assets/31befbd1-4dba-48c4-a4ad-905e2290bb5b" width="100%" alt="Screen 4 - Classes" />
+      <br/><b>Screen 4 - Classes</b>
     </td>
     <td width="33.3%" align="center">
-      <img src="https://github.com/user-attachments/assets/ee45b9d6-21f0-4cce-b471-655b254c8fd9" width="100%" alt="Screen 5 - Records" />
-      <br/><b>Screen 5 - Records</b>
+      <img src="https://github.com/user-attachments/assets/e93ce6f5-7bfc-4576-ac6a-e15c5e53a471" width="100%" alt="Screen 5 - Take Attendance/Marking" />
+      <br/><b>Screen 5 - Take Attendance/Marking</b>
     </td>
     <td width="33.3%" align="center">
-      <img src="https://github.com/user-attachments/assets/8b906df3-f183-4915-938a-c8a09c463815" width="100%" alt="Screen 6 - Attendance Logs" />
-      <br/><b>Screen 6 - Attendance Logs</b>
+      <img src="https://github.com/user-attachments/assets/502f3805-2a06-4213-8f22-f40dac01775c" width="100%" alt="Screen 6 - Attendance Report" />
+      <br/><b>Screen 6 - Attendance Report</b>
     </td>
   </tr>
   <!-- Row 3 -->
   <tr>
     <td width="33.3%" align="center">
-      <img src="https://github.com/user-attachments/assets/f7664fca-39a2-4e62-9467-309c97a11105" width="100%" alt="Screen 7 - AI Engine Settings" />
-      <br/><b>Screen 7 - AI Engine Settings</b>
+      <img src="https://github.com/user-attachments/assets/4cbd5f13-1228-40d2-a5b2-13c327ab5364" width="100%" alt="Screen 7 - Students" />
+      <br/><b>Screen 7 - Students</b>
     </td>
     <td width="33.3%" align="center">
-      <img src="https://github.com/user-attachments/assets/048fe81c-e9ae-4097-abb8-86c8c4e09183" width="100%" alt="Screen 8 - Profile Report" />
-      <br/><b>Screen 8 - Profile Report</b>
+      <img src="https://github.com/user-attachments/assets/f2ffff6a-ceaf-408d-943c-bccb1708274b" width="100%" alt="Screen 8 - Student-Details" />
+      <br/><b>Screen 8 - Student-Details</b>
     </td>
     <td width="33.3%" align="center">
-      <img src="https://github.com/user-attachments/assets/2246a906-27b8-43bd-a6bb-46541d4c7d6b" width="100%" alt="Screen 9 - System Settings" />
+      <img src="https://github.com/user-attachments/assets/765d7c09-81ba-4595-a04e-e1fa91a6a661" width="100%" alt="Screen 9 - System Settings" />
       <br/><b>Screen 9 - System Settings</b>
     </td>
   </tr>
@@ -77,4 +77,4 @@
 ### ⚙️ Step-by-Step Deployment
 1. **Initialize Local Repository**
    ```bash
-   git clone [https://github.com/sharjeelkhan-dev/Student-Attendance-App.git](https://github.com/sharjeelkhan-dev/Student-Attendance-App.git)
+   git clone https://github.com/sharjeelkhan-dev/Student-Attendance-App.git
