@@ -69,12 +69,6 @@
 ## 🛠 Setup & Installation
 
 ### 📋 Prerequisites
-* Android Studio Ladybug (or newer)
-* A Google Gemini API Key
-* Firebase Project setup
-* Active Firebase Console Sandbox Instance
-
-### ⚙️ Step-by-Step Deployment
-1. **Initialize Local Repository**
-   ```bash
-   git clone https://github.com/sharjeelkhan-dev/Student-Attendance-App.git
+- Android Studio Ladybug (or newer)
+- A Google Gemini API Key
+- Firebase Project setup
