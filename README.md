@@ -5,6 +5,7 @@
 
 | Subsystem | Technical Execution Architecture |
 | :--- | :--- |
+| 🤖 **AI-Powered Commands** | Firebase-integrated Gemini AI logic for intelligent pattern analysis.|
 | 🚀 **Reactive Caching** | Offline-first attendance logging engineered using Room/SQLite backed by transactional Kotlin Flow reactive streams. |
 | ⚡ **AI Processing** | Integrated "Google Gemini 3.5 Flash" SDK to process natural language scheduling rules and automated daily tracking metrics. |
 | 🔐 **Local Verification** | Enterprise-grade access control implemented using the Android "Biometric API" for robust fingerprint and face unlock mechanisms. |
