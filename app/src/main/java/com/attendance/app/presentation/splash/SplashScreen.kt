@@ -22,6 +22,7 @@ import com.attendance.app.presentation.theme.AttendanceTheme
 import com.attendance.app.presentation.theme.PrimaryGreen
 import com.attendance.app.presentation.theme.PrimaryGreenDark
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun SplashScreen(
@@ -42,7 +43,7 @@ fun SplashScreen(
     )
     LaunchedEffect(Unit) {
         startAnimation = true
-        delay(2000)
+        delay(2000.milliseconds)
         onSplashComplete()
     }
 

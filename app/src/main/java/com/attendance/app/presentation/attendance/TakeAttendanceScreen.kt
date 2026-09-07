@@ -1,5 +1,8 @@
 package com.attendance.app.presentation.attendance
+
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,12 +22,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.text.style.TextAlign
+import com.attendance.app.R
 import com.attendance.app.domain.model.AttendanceStatus
 import com.attendance.app.domain.model.ClassModel
 import com.attendance.app.domain.model.Student
@@ -32,7 +36,7 @@ import com.attendance.app.presentation.components.StandardHeader
 import com.attendance.app.presentation.components.VerticalScrollbar
 import com.attendance.app.presentation.theme.*
 import kotlinx.coroutines.delay
-import com.attendance.app.R
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun TakeAttendanceScreen(
@@ -41,13 +45,13 @@ fun TakeAttendanceScreen(
     viewModel: AttendanceViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    
+
     var showLoading by remember { mutableStateOf(false) }
     LaunchedEffect(state.isLoading) {
         if (state.isLoading) {
             showLoading = true
         } else {
-            delay(800)
+            delay(800.milliseconds)
             showLoading = false
         }
     }
@@ -61,6 +65,7 @@ fun TakeAttendanceScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AttendanceContent(
     state: AttendanceState,
@@ -69,12 +74,17 @@ private fun AttendanceContent(
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues(0.dp)
 ) {
-    val filteredStudents = if (state.searchQuery.isBlank()) {
-        state.students
-    } else {
-        state.students.filter {
-            it.student.fullName.contains(state.searchQuery, ignoreCase = true) ||
-            it.student.rollNumber.contains(state.searchQuery, ignoreCase = true)
+    // 💡 Performance Fix: Filtering deferred to derivedStateOf (Prevents recalculation on scroll)
+    val filteredStudents by remember(state.students, state.searchQuery) {
+        derivedStateOf {
+            if (state.searchQuery.isBlank()) {
+                state.students
+            } else {
+                state.students.filter {
+                    it.student.fullName.contains(state.searchQuery, ignoreCase = true) ||
+                            it.student.rollNumber.contains(state.searchQuery, ignoreCase = true)
+                }
+            }
         }
     }
 
@@ -119,49 +129,48 @@ private fun AttendanceContent(
                     modifier = Modifier.fillMaxSize(),
                     state = listState
                 ) {
-                    // Search Bar
-                    item {
+                    // Search Bar (Original Layout)
+                    item(key = "search_bar") {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 20.dp, vertical = 15.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Search Bar
                             Surface(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(24.dp),
                                 color = if (isDark) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) else Color(0xFFF2F4F7),
                                 tonalElevation = 2.dp,
-                                border = if (isDark) 
-                                    androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)) 
-                                else 
+                                border = if (isDark)
+                                    androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+                                else
                                     androidx.compose.foundation.BorderStroke(1.dp, Color.Black.copy(alpha = 0.1f))
                             ) {
                                 TextField(
                                     value = state.searchQuery,
                                     onValueChange = { onEvent(AttendanceEvent.SearchQueryChanged(it)) },
                                     modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { 
+                                    placeholder = {
                                         Text(
                                             "Search student...",
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                                        ) 
+                                        )
                                     },
-                                    leadingIcon = { 
+                                    leadingIcon = {
                                         Icon(
                                             painter = painterResource(id = R.drawable.magnifying_glass_icon),
                                             contentDescription = null,
                                             tint = Color.LightGray,
                                             modifier = Modifier.size(20.dp).offset(x = 5.dp)
-                                        ) 
+                                        )
                                     },
                                     trailingIcon = {
                                         if (state.searchQuery.isNotEmpty()) {
                                             IconButton(onClick = { onEvent(AttendanceEvent.SearchQueryChanged("")) }) {
                                                 Icon(
-                                                    Icons.Default.Close, 
+                                                    Icons.Default.Close,
                                                     contentDescription = "Clear",
                                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     modifier = Modifier.size(18.dp)
@@ -186,9 +195,9 @@ private fun AttendanceContent(
                         }
                     }
 
-                    // Student list - Simple Rows without Cards
+                    // Student List Section
                     if (filteredStudents.isEmpty() && !state.isLoading) {
-                        item {
+                        item(key = "empty_state") {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -197,8 +206,7 @@ private fun AttendanceContent(
                             ) {
                                 Text(
                                     text = if (state.searchQuery.isBlank())
-                                        "No students found in this class." +
-                                                "\nAdd students to start taking attendance!"
+                                        "No students found in this class.\nAdd students to start taking attendance!"
                                     else
                                         "No students match your search.",
                                     style = MaterialTheme.typography.bodyMedium,
@@ -209,10 +217,17 @@ private fun AttendanceContent(
                             }
                         }
                     } else {
-                        items(filteredStudents, key = { it.student.id }) { studentState ->
+                        items(
+                            items = filteredStudents,
+                            key = { it.student.id }
+                        ) { studentState ->
+                            val avatarColor = remember(studentState.student.fullName) {
+                                getAvatarColor(studentState.student.fullName)
+                            }
+
                             AttendanceStudentRow(
                                 studentState = studentState,
-                                avatarColor = getAvatarColor(studentState.student.fullName),
+                                avatarColor = avatarColor,
                                 onToggle = { status ->
                                     onEvent(AttendanceEvent.ToggleStatus(studentState.student.id, status))
                                 }
@@ -284,7 +299,7 @@ private fun AttendanceStudentRow(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Name and roll
+                // Name and Roll Number
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = studentState.student.fullName,
@@ -299,85 +314,72 @@ private fun AttendanceStudentRow(
                     )
                 }
 
-                // Present button
+                // Present Button (Aesthetics Exact Same, Internal Mechanics Optimized)
                 val isPresentSelected = studentState.status == AttendanceStatus.PRESENT
-                Button(
-                    onClick = { onToggle(AttendanceStatus.PRESENT) },
-                    modifier = Modifier.size(40.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    contentPadding = PaddingValues(0.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isPresentSelected) PresentGreen else if (isDark) DividerColorDark else PresentGreen.copy(alpha = 0.1f),
-                        contentColor = if (isPresentSelected) Color.White else PresentGreen
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = if (isPresentSelected) 4.dp else 0.dp)
-                ) {
-                    Text("P", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                }
+                AttendanceActionButton(
+                    text = "P",
+                    isSelected = isPresentSelected,
+                    selectedBg = PresentGreen,
+                    unselectedBg = if (isDark) DividerColorDark else PresentGreen.copy(alpha = 0.1f),
+                    selectedFg = Color.White,
+                    unselectedFg = PresentGreen,
+                    onClick = { onToggle(AttendanceStatus.PRESENT) }
+                )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Absent button
+                // Absent Button (Aesthetics Exact Same, Internal Mechanics Optimized)
                 val isAbsentSelected = studentState.status == AttendanceStatus.ABSENT
-                Button(
-                    onClick = { onToggle(AttendanceStatus.ABSENT) },
-                    modifier = Modifier.size(40.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    contentPadding = PaddingValues(0.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isAbsentSelected) AbsentRed else if (isDark) DividerColorDark else AbsentRed.copy(alpha = 0.1f),
-                        contentColor = if (isAbsentSelected) Color.White else AbsentRed
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = if (isAbsentSelected) 4.dp else 0.dp)
-                ) {
-                    Text("A", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                }
+                AttendanceActionButton(
+                    text = "A",
+                    isSelected = isAbsentSelected,
+                    selectedBg = AbsentRed,
+                    unselectedBg = if (isDark) DividerColorDark else AbsentRed.copy(alpha = 0.1f),
+                    selectedFg = Color.White,
+                    unselectedFg = AbsentRed,
+                    onClick = { onToggle(AttendanceStatus.ABSENT) }
+                )
             }
         }
     }
 }
 
-
+// ⚡ Custom Action Button keeping exact same 40dp Circle, Elevation & Colors without M3 Button Lag
+@Composable
+private fun AttendanceActionButton(
+    text: String,
+    isSelected: Boolean,
+    selectedBg: Color,
+    unselectedBg: Color,
+    selectedFg: Color,
+    unselectedFg: Color,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .clickable(
+                onClick = onClick,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple()
+            ),
+        shape = RoundedCornerShape(28.dp),
+        color = if (isSelected) selectedBg else unselectedBg,
+        contentColor = if (isSelected) selectedFg else unselectedFg,
+        tonalElevation = if (isSelected) 4.dp else 0.dp,
+        shadowElevation = if (isSelected) 4.dp else 0.dp
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(text = text, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+    }
+}
 
 @Preview(showBackground = true, name = "Light Mode")
 @Composable
 fun TakeAttendancePreviewLight() {
     AttendanceTheme(darkTheme = false) {
-                        AttendanceContent(
-            state = AttendanceState(
-                selectedClass = ClassModel(id = 1, name = "Software Engineering", section = "6C1"),
-                students = listOf(
-                    StudentAttendanceState(
-                        student = Student(id = 1, fullName = "John Doe", rollNumber = "2021-SE-01", classId = 1),
-                        status = AttendanceStatus.PRESENT
-                    ),
-                    StudentAttendanceState(
-                        student = Student(id = 2, fullName = "Jane Smith", rollNumber = "2021-SE-02", classId = 1),
-                        status = AttendanceStatus.ABSENT
-                    ),
-                    StudentAttendanceState(
-                        student = Student(id = 3, fullName = "Alex Johnson", rollNumber = "2021-SE-03", classId = 1),
-                        status = AttendanceStatus.PRESENT
-                    ),
-                    StudentAttendanceState(
-                        student = Student(id = 4, fullName = "Sarah Williams", rollNumber = "2021-SE-04", classId = 1),
-                        status = AttendanceStatus.PRESENT
-                    )
-                ),
-                presentCount = 3,
-                absentCount = 1,
-                isLoading = false
-            ),
-            showLoading = false,
-            onEvent = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Dark Mode", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun TakeAttendancePreviewDark() {
-    AttendanceTheme(darkTheme = true) {
         AttendanceContent(
             state = AttendanceState(
                 selectedClass = ClassModel(id = 1, name = "Software Engineering", section = "6C1"),

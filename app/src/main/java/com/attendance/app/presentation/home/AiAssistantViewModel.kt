@@ -14,8 +14,14 @@ data class AiAssistantState(
         ChatMessage("Hello! I'm your AI Assistant. How can I help you today?", isUser = false)
     ),
     val isLoading: Boolean = false,
-    val currentInput: String = ""
+    val currentInput: String = "",
+    val voiceResult: String? = null
 )
+
+sealed class AiAction {
+    data class Navigate(val route: String) : AiAction()
+    object SaveAttendance : AiAction()
+}
 
 data class ChatMessage(
     val text: String,
@@ -32,8 +38,16 @@ class AiAssistantViewModel @Inject constructor(
     private val _state = MutableStateFlow(AiAssistantState())
     val state: StateFlow<AiAssistantState> = _state.asStateFlow()
 
+    private val _actionEvent = MutableSharedFlow<AiAction>()
+    val actionEvent = _actionEvent.asSharedFlow()
+
     fun onInputChange(input: String) {
         _state.update { it.copy(currentInput = input) }
+    }
+
+    fun onVoiceInputCaptured(text: String) {
+        _state.update { it.copy(currentInput = text) }
+        sendMessage()
     }
 
     fun sendMessage() {
@@ -42,8 +56,8 @@ class AiAssistantViewModel @Inject constructor(
 
         val userMessage = ChatMessage(input, isUser = true)
         val history = _state.value.messages.map { it.toDomain() }
-        
-        _state.update { 
+
+        _state.update {
             it.copy(
                 messages = it.messages + userMessage,
                 currentInput = "",
@@ -53,11 +67,36 @@ class AiAssistantViewModel @Inject constructor(
 
         viewModelScope.launch {
             aiRepository.processAiCommand(input, history).collect { response ->
-                _state.update { 
-                    it.copy(
-                        messages = it.messages + ChatMessage(response, isUser = false),
-                        isLoading = false
-                    )
+                var cleanText = response
+
+                // Parse Navigation
+                if (response.contains("ACTION:NAVIGATE")) {
+                    val navigateLine = response.lines().find { it.contains("ACTION:NAVIGATE") }
+                    navigateLine?.let { line ->
+                        val route = line.split("|").find { it.startsWith("ROUTE:") }?.removePrefix("ROUTE:")?.trim()
+                        route?.let { _actionEvent.emit(AiAction.Navigate(it)) }
+                        cleanText = cleanText.replace(line, "").trim()
+                    }
+                }
+
+                // Parse Attendance Action
+                if (response.contains("ACTION:MARK_ATTENDANCE")) {
+                    val attendanceLine = response.lines().find { it.contains("ACTION:MARK_ATTENDANCE") }
+                    attendanceLine?.let { line ->
+                        _actionEvent.emit(AiAction.SaveAttendance)
+                        cleanText = cleanText.replace(line, "").trim()
+                    }
+                }
+
+                if (cleanText.isNotEmpty()) {
+                    _state.update {
+                        it.copy(
+                            messages = it.messages + ChatMessage(cleanText, isUser = false),
+                            isLoading = false
+                        )
+                    }
+                } else {
+                    _state.update { it.copy(isLoading = false) }
                 }
             }
         }

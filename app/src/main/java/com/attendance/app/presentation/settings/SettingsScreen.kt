@@ -116,18 +116,20 @@ private fun SettingsContent(
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
+    val isDark = LocalIsDarkMode.current
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(if (isDark) MaterialTheme.colorScheme.background else Color(0xFFF8F9FA))
     ) {
+        // EXACT Header Matching StudentDetailScreen Structure
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(PrimaryGreenDark)
                 .statusBarsPadding()
-                .height(80.dp)
+                .height(70.dp)
         ) {
             // Back Button
             IconButton(
@@ -143,11 +145,11 @@ private fun SettingsContent(
                 )
             }
 
-            // Text Content
+            // Text Content (Exactly aligned with StudentDetailScreen)
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 65.dp, top = 18.dp)
+                    .padding(start = 65.dp, top = 12.dp)
             ) {
                 Text(
                     text = "Settings",
@@ -179,10 +181,13 @@ private fun SettingsContent(
         ) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .navigationBarsPadding(),
-                contentPadding = PaddingValues(bottom = 24.dp)
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    top = 8.dp,
+                    bottom = WindowInsets.navigationBars
+                        .asPaddingValues()
+                        .calculateBottomPadding() + 32.dp
+                )
             ) {
                 // Appearance
                 item {
@@ -208,7 +213,7 @@ private fun SettingsContent(
                     )
                 }
 
-                // Security
+                // AI Configuration & Security
                 item {
                     SettingsSectionHeader("AI CONFIGURATION")
                     SettingsAiKeyItem(
@@ -226,7 +231,7 @@ private fun SettingsContent(
                     )
                 }
 
-                // Data
+                // Data & Calendar Options
                 item {
                     SettingsSectionHeader("DATA")
 
@@ -272,7 +277,6 @@ private fun SettingsContent(
                                     .toLocalDate()
                             } ?: java.time.LocalDate.now()
 
-                            // Custom Green Header to match the classic Android look
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -455,7 +459,7 @@ private fun SettingsSectionHeader(title: String) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         fontWeight = FontWeight.Bold,
         letterSpacing = 1.sp,
-        modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp)
+        modifier = Modifier.padding(start = 24.dp, top = 20.dp, bottom = 8.dp)
     )
 }
 

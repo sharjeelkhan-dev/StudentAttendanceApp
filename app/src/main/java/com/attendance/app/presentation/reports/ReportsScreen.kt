@@ -1,4 +1,5 @@
 package com.attendance.app.presentation.reports
+
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -45,7 +46,7 @@ fun ReportsScreen(
     viewModel: ReportsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    
+
     var showLoading by remember { mutableStateOf(false) }
     LaunchedEffect(state.isLoading) {
         if (state.isLoading) {
@@ -79,18 +80,25 @@ private fun ReportsContent(
 
     var allSessionsExpanded by remember { mutableStateOf(false) }
 
-    var visibleStudentsLimit by remember(state.studentReports) { mutableIntStateOf(6) }
-    var visibleSessionsLimit by remember(state.sessionDetails) { mutableIntStateOf(0) }
-    
     val studentsPerPage = 6
     val sessionsPerPage = 4
 
+    // Initial limits set to page size directly to prevent extra composition cycles
+    var visibleStudentsLimit by remember(state.studentReports) { mutableIntStateOf(studentsPerPage) }
+    var visibleSessionsLimit by remember(state.sessionDetails) { mutableIntStateOf(sessionsPerPage) }
+
+    // Memorize computations to eliminate scroll lag
     val sortedReports = remember(state.studentReports) {
         state.studentReports.sortedBy { it.student.id }
     }
-    
-    val displayedStudents = sortedReports.take(visibleStudentsLimit)
-    val displayedSessions = state.sessionDetails.take(visibleSessionsLimit)
+
+    val displayedStudents = remember(sortedReports, visibleStudentsLimit) {
+        sortedReports.take(visibleStudentsLimit)
+    }
+
+    val displayedSessions = remember(state.sessionDetails, visibleSessionsLimit) {
+        state.sessionDetails.take(visibleSessionsLimit)
+    }
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         StandardHeader(
@@ -199,9 +207,6 @@ private fun ReportsContent(
                                 letterSpacing = 1.sp,
                                 modifier = Modifier.padding(start = 24.dp, top = 32.dp, bottom = 12.dp)
                             )
-                            if (visibleSessionsLimit == 0) {
-                                LaunchedEffect(Unit) { visibleSessionsLimit = sessionsPerPage }
-                            }
                         }
 
                         item {
@@ -213,8 +218,8 @@ private fun ReportsContent(
                                     .animateContentSize(),
                                 shape = RoundedCornerShape(28.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = if (isDarkGlobal) 
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) 
+                                    containerColor = if (isDarkGlobal)
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                                     else Color(0xFFF2F4F7)
                                 ),
                                 border = if (!isDarkGlobal) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEAECF0)) else null
@@ -248,7 +253,6 @@ private fun ReportsContent(
                                             }
                                         }
 
-                                        // Only this button has the ripple effect
                                         IconButton(
                                             onClick = { allSessionsExpanded = !allSessionsExpanded },
                                             modifier = Modifier
@@ -258,7 +262,7 @@ private fun ReportsContent(
                                                     else Color.Black.copy(alpha = 0.05f),
                                                     CircleShape
                                                 )
-                                            ) {
+                                        ) {
                                             Icon(
                                                 imageVector = if (allSessionsExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                                                 contentDescription = if (allSessionsExpanded) "Collapse" else "Expand",
@@ -273,12 +277,11 @@ private fun ReportsContent(
                                         Spacer(modifier = Modifier.height(16.dp))
                                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                             displayedSessions.forEach { session ->
-                                                val sortedStudents = session.studentStatuses.sortedBy { it.second == AttendanceStatus.ABSENT }
                                                 SessionDetailCard(
                                                     date = session.summary.date,
                                                     presentCount = session.summary.presentCount,
                                                     totalCount = session.summary.totalStudents,
-                                                    students = sortedStudents,
+                                                    students = session.studentStatuses,
                                                     expanded = true,
                                                     modifier = Modifier.fillMaxWidth()
                                                 )
@@ -289,7 +292,7 @@ private fun ReportsContent(
                             }
                         }
 
-                        if (visibleSessionsLimit > 0 && visibleSessionsLimit < state.sessionDetails.size) {
+                        if (visibleSessionsLimit < state.sessionDetails.size) {
                             item {
                                 Box(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator(
@@ -330,54 +333,73 @@ private fun StudentReportCard(
         else -> AbsentRed
     }
 
+    // Memorize initials calculation per student item
+    val initials = remember(report.student.fullName) {
+        report.student.fullName
+            .split(" ")
+            .filter { it.isNotBlank() }
+            .take(2)
+            .mapNotNull { it.firstOrNull()?.uppercaseChar() }
+            .joinToString("")
+    }
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors
-            (containerColor = MaterialTheme.
-        colorScheme.surface),
-        elevation = CardDefaults.
-        cardElevation(defaultElevation = 3.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Row(
             modifier = Modifier.padding(12.dp).fillMaxWidth().offset(x = 3.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val initials = report.student.fullName.split(" ").filter { it.isNotBlank() }.take(2).mapNotNull { it.firstOrNull()?.uppercaseChar() }.joinToString("")
-            Box(modifier = Modifier.size(44.dp).clip(CircleShape)
-                .background(getAvatarColor(report.student.fullName)),
-                contentAlignment = Alignment.Center) {
-                Text(text = initials, color = Color.White,
+            Box(
+                modifier = Modifier.size(44.dp).clip(CircleShape)
+                    .background(getAvatarColor(report.student.fullName)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = initials,
+                    color = Color.White,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.ExtraBold)
+                    fontWeight = FontWeight.ExtraBold
+                )
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = report.student.fullName,
+                        Text(
+                            text = report.student.fullName,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.ExtraBold,
                             modifier = Modifier.offset(y = (5.5).dp),
                             color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1, fontSize = 14.sp)
+                            maxLines = 1,
+                            fontSize = 14.sp
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "${report.student.rollNumber} " +
-                                " •  ${report.presentCount}/" +
-                                "${report.totalSessions} " +
-                                "classes",
-                            style = MaterialTheme.typography
-                                .bodySmall,
+                        Text(
+                            text = "${report.student.rollNumber}  •  ${report.presentCount}/${report.totalSessions} classes",
+                            style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.offset(y = (2).dp),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             fontWeight = FontWeight.Medium,
-                            fontSize = 10.sp)
+                            fontSize = 10.sp
+                        )
                     }
-                    Text(text = "${percentage.toInt()}%",
+                    Text(
+                        text = "${percentage.toInt()}%",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
                         modifier = Modifier.offset(x = (-12).dp).offset(y = 5.5.dp),
-                        color = statusColor, fontSize = 15.sp)
+                        color = statusColor,
+                        fontSize = 15.sp
+                    )
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 LinearProgressIndicator(
@@ -386,8 +408,6 @@ private fun StudentReportCard(
                         .height(4.dp)
                         .offset(y = (-4).dp)
                         .clip(CircleShape),
-                    drawStopIndicator = {},
-                    gapSize = 0.dp,
                     color = statusColor,
                     trackColor = statusColor.copy(alpha = 0.08f),
                     strokeCap = StrokeCap.Round
@@ -408,8 +428,19 @@ private fun SessionDetailCard(
     modifier: Modifier = Modifier
 ) {
     val isDarkGlobal = LocalIsDarkMode.current
-    val parsedDate = try { LocalDate.parse(date) } catch (_: Exception) { LocalDate.now() }
-    val displayDate = parsedDate.format(DateTimeFormatter.ofPattern("MMMM d", Locale.ENGLISH))
+
+    // Memorize parsing & formatting per date change
+    val parsedDate = remember(date) {
+        try { LocalDate.parse(date) } catch (_: Exception) { LocalDate.now() }
+    }
+    val displayDate = remember(parsedDate) {
+        parsedDate.format(DateTimeFormatter.ofPattern("MMMM d", Locale.ENGLISH))
+    }
+
+    // Memorize sorted student statuses to avoid sorting inside list layout frame
+    val sortedStudents = remember(students) {
+        students.sortedBy { it.second == AttendanceStatus.ABSENT }
+    }
 
     Card(
         modifier = modifier
@@ -417,9 +448,7 @@ private fun SessionDetailCard(
             .animateContentSize()
             .clip(RoundedCornerShape(28.dp)),
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp),
         border = if (!isDarkGlobal) androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFFEAECF0)) else null
     ) {
@@ -436,7 +465,7 @@ private fun SessionDetailCard(
                     color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 15.sp
                 )
-                
+
                 Text(
                     text = "$presentCount/$totalCount present",
                     style = MaterialTheme.typography.labelSmall,
@@ -445,7 +474,7 @@ private fun SessionDetailCard(
                     fontSize = 11.sp
                 )
             }
-            
+
             if (expanded) {
                 Spacer(modifier = Modifier.height(16.dp))
                 FlowRow(
@@ -453,12 +482,14 @@ private fun SessionDetailCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    students.sortedBy { it.second == AttendanceStatus.ABSENT }.forEach { (name, status) ->
-                        val initials = name.split(" ")
-                            .filter { it.isNotBlank() }
-                            .take(2)
-                            .mapNotNull { it.firstOrNull()?.uppercaseChar() }
-                            .joinToString("")
+                    sortedStudents.forEach { (name, status) ->
+                        val initials = remember(name) {
+                            name.split(" ")
+                                .filter { it.isNotBlank() }
+                                .take(2)
+                                .mapNotNull { it.firstOrNull()?.uppercaseChar() }
+                                .joinToString("")
+                        }
 
                         val isPresent = status != AttendanceStatus.ABSENT
 
@@ -478,7 +509,7 @@ private fun SessionDetailCard(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.ExtraBold
                             )
-                            
+
                             if (!isPresent) {
                                 androidx.compose.foundation.Canvas(modifier = Modifier.matchParentSize()) {
                                     drawLine(
@@ -535,8 +566,8 @@ private fun SessionHistoryPreview() {
                 modifier = Modifier.fillMaxWidth().animateContentSize(),
                 shape = RoundedCornerShape(28.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (LocalIsDarkMode.current) 
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) 
+                    containerColor = if (LocalIsDarkMode.current)
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                     else Color(0xFFF2F4F7)
                 )
             ) {

@@ -1,4 +1,7 @@
 package com.attendance.app.presentation.home
+import android.app.Activity
+import android.content.Intent
+import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -70,7 +73,8 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues = PaddingValues(0.dp),
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    aiViewModel: AiAssistantViewModel = hiltViewModel() // Access AI ViewModel here
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -87,6 +91,38 @@ fun HomeScreen(
     }
 
     var showAiAssistant by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        aiViewModel.actionEvent.collect { action ->
+            when (action) {
+                is AiAction.Navigate -> {
+                    when (action.route.lowercase()) {
+                        "take_attendance" -> onNavigateToAttendance()
+                        "reports" -> onNavigateToReports()
+                        "students" -> onNavigateToStudents()
+                        "settings" -> onNavigateToSettings()
+                        "home" -> { /* Already here */ }
+                    }
+                    showAiAssistant = false
+                }
+                AiAction.SaveAttendance -> {
+                    // Feedback handled by AI text response
+                    showAiAssistant = false
+                }
+            }
+        }
+    }
+    
+    val voiceLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val spokenText = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0) ?: ""
+            if (spokenText.isNotEmpty()) {
+                aiViewModel.onVoiceInputCaptured(spokenText)
+            }
+        }
+    }
 
     LaunchedEffect(state.message) {
         state.message?.let {
@@ -114,7 +150,15 @@ fun HomeScreen(
 
     if (showAiAssistant) {
         AiAssistantDialog(
-            onDismiss = { showAiAssistant = false }
+            onDismiss = { showAiAssistant = false },
+            onVoiceClick = {
+                val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your attendance command...")
+                }
+                voiceLauncher.launch(intent)
+            },
+            viewModel = aiViewModel
         )
     }
 }
