@@ -12,6 +12,7 @@
 | ☁️ **Data Integrity** | Structured automatic cloud fallback synchronization processing records safely over "Firebase NoSQL Architecture". |
 | 📊 **Analytics Pipeline** | Context-aware metrics rendering session histories, structured attendance ratios, and dynamic reporting charts. |
 | 🎨 **Material 3 UI** | Completely immersive, edge-to-edge system interfaces styled natively via declarative Jetpack Compose elements with dynamic dark theme support. |
+| 🎨 **Asset Attribution** | Core system actions, navigation nodes, and modern news channel vector elements curated via [Uxwing](https://uxwing.com/). |
 
 <details>
 <summary><b>✨ View Interface Design (Click to Expand)</b></summary>
