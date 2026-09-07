@@ -28,7 +28,7 @@
       <br/><b>Screen 2 - Dashboard</b>
     </td>
     <td width="33.3%" align="center">
-      <img src="https://github.com/user-attachments/assets/5e976761-a23d-4cd3-ac87-bad122b255e8" width="100%" alt="Screen 3 - AI-Prompting" />
+      <img src="https://github.com/user-attachments/assets/bd85bd0a-39b4-45c5-8e4a-9b452c090020" width="100%" alt="Screen 3 - AI-Prompting" />
       <br/><b>Screen 3 - AI-Prompting</b>
     </td>
   </tr>
