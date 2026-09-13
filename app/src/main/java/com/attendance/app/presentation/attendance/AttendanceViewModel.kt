@@ -173,7 +173,7 @@ class AttendanceViewModel @Inject constructor(
     private fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true) }
-            delay(800)
+            delay(800.milliseconds)
             refreshTrigger.emit(Unit)
             _state.update { it.copy(isRefreshing = false) }
         }
