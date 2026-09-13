@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 data class StudentAttendanceState(
     val student: Student,
@@ -203,7 +204,7 @@ class AttendanceViewModel @Inject constructor(
                 _state.update { it.copy(isSaving = false, isSaved = true) }
                 
                 // Wait for 3 seconds
-                delay(3000)
+                delay(3000.milliseconds)
                 
                 // Revert back to "Save"
                 _state.update { it.copy(isSaved = false) }
